@@ -8,17 +8,31 @@ use clap::Parser;
     about = "Tool to fetch the timelogs from the GitLab API and display them in a helpful way."
 )]
 pub struct CliArgs {
-    /// The GitLab host. For example `https://gitlab.domain.tld`
+    /// The GitLab host without `https://`. For example `gitlab.domain.tld`
     #[arg(long = "host", env)]
     gitlab_host: String,
-    /// ID of the group for that you want to get the data. For example
-    /// the ID of the group `%my_company%`.
-    #[arg(long = "group-id", env)]
-    gitlab_group_id: u64,
     /// Your GitLab username
     #[arg(long = "username", env)]
     gitlab_username: String,
     /// Token with read access to GitLab API
     #[arg(long = "token", env)]
-    gitlab_token: String
+    gitlab_token: String,
+    /// Amount of entries to fetch (from the end, i.e. freshest data).
+    #[arg(long = "last", env, default_value = "20")]
+    gitlab_last: usize,
+}
+
+impl CliArgs {
+    pub fn host(&self) -> &str {
+        &self.gitlab_host
+    }
+    pub fn username(&self) -> &str {
+        &self.gitlab_username
+    }
+    pub fn token(&self) -> &str {
+        &self.gitlab_token
+    }
+    pub fn last(&self) -> usize {
+        self.gitlab_last
+    }
 }

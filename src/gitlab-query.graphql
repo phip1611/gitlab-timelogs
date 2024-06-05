@@ -1,11 +1,16 @@
 {
-  timelogs(groupId: "gid://gitlab/Group/948", username: "pschuster", last: 13) {
+  timelogs(username: "%USERNAME%", last: %LAST%) {
     nodes {
       spentAt
       timeSpent
       summary
       issue {
         title
+      }
+      project {
+        group {
+          name
+        }
       }
     }
   }
