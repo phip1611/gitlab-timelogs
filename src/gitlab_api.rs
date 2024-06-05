@@ -4,23 +4,47 @@ pub mod types {
     use serde::Deserialize;
 
     #[derive(Deserialize, Debug)]
-    pub struct Timelog {
+    pub struct Issue {
+        pub title: String,
+        pub epic: Epic,
+    }
+
+    #[derive(Deserialize, Debug)]
+    pub struct ResponseEntry {
         pub spentAt: String,
-        pub timeSpent: i32,
+        pub timeSpent: u64,
+        pub summary: String,
+        pub issue: Issue,
+        pub project: Project,
     }
 
     #[derive(Deserialize, Debug)]
-    pub struct TimelogResponse {
-        pub data: TimelogData,
+    pub struct ResponseTimelogs {
+        pub nodes: Vec<ResponseEntry>,
     }
 
     #[derive(Deserialize, Debug)]
-    pub struct TimelogData {
-        pub timelogs: TimelogNodes,
+    pub struct ResponseData {
+        pub timelogs: ResponseTimelogs,
     }
 
     #[derive(Deserialize, Debug)]
-    pub struct TimelogNodes {
-        pub nodes: Vec<Timelog>,
+    pub struct Response {
+        pub data: ResponseData,
+    }
+
+    #[derive(Deserialize, Debug)]
+    pub struct Project {
+        pub group: Group,
+    }
+
+    #[derive(Deserialize, Debug)]
+    pub struct Group {
+        pub name: String,
+    }
+
+    #[derive(Deserialize, Debug)]
+    pub struct Epic {
+        pub title: String,
     }
 }

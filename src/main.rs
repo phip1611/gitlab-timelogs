@@ -1,4 +1,4 @@
-use crate::gitlab_api::types::TimelogResponse;
+use crate::gitlab_api::types::Response;
 use clap::Parser;
 use reqwest::blocking::Client;
 use reqwest::header::AUTHORIZATION;
@@ -27,7 +27,7 @@ fn main() {
         .json(&payload)
         .send()
         .unwrap()
-        .json::<TimelogResponse>()
+        .json::<Response>()
         .unwrap();
 
     dbg!(res);

@@ -6,6 +6,9 @@
       summary
       issue {
         title
+        epic {
+          title
+        }
       }
       project {
         group {
