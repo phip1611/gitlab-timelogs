@@ -1,0 +1,12 @@
+{
+  timelogs(groupId: "gid://gitlab/Group/948", username: "pschuster", last: 13) {
+    nodes {
+      spentAt
+      timeSpent
+      summary
+      issue {
+        title
+      }
+    }
+  }
+}
