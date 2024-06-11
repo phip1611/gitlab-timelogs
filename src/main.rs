@@ -91,11 +91,14 @@ fn print_timelog(log: &ResponseNode) {
 }
 
 fn print_day(day: &str, data: &Response) {
-    {
-        let total = find_total_time_per_day(day, data);
-        print!("{day} (total: ");
-        print_duration(total);
-        println!(")");
+    let total = find_total_time_per_day(day, data);
+    print!("{day} (total: ");
+    print_duration(total);
+    println!(")");
+
+    // Sanity checks
+    if total.as_secs() > 10 * 60 * 60 {
+        println!("  WARN: More than 10 hours per work day! Is this correct?");
     }
 
     for log in find_logs_of_day(day, data) {
