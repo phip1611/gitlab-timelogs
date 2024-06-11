@@ -1,5 +1,5 @@
 use crate::gitlab_api::types::{Response, ResponseNode};
-use chrono::{DateTime, Datelike, Local, Weekday, NaiveDate};
+use chrono::{DateTime, Datelike, Local, NaiveDate, Weekday};
 use clap::Parser;
 use nu_ansi_term::{Color, Style};
 use reqwest::blocking::Client;
@@ -76,20 +76,17 @@ fn find_dates(res: &Response, days_n: usize) -> BTreeSet<NaiveDate> {
 }
 
 fn find_total_time_per_day(date: &NaiveDate, res: &Response) -> Duration {
-    find_logs_of_day(date, res)
-        .map(|node| node.timeSpent)
-        .sum()
+    find_logs_of_day(date, res).map(|node| node.timeSpent).sum()
 }
 
-fn find_logs_of_day<'a>(date: &'a NaiveDate, res: &'a Response) -> impl Iterator<Item = &'a ResponseNode> {
-    res.data
-        .timelogs
-        .nodes
-        .iter()
-        .filter(|node| {
-            let node_date = parse_gitlab_datetime(&node.spentAt);
-            node_date == *date
-        })
+fn find_logs_of_day<'a>(
+    date: &'a NaiveDate,
+    res: &'a Response,
+) -> impl Iterator<Item = &'a ResponseNode> {
+    res.data.timelogs.nodes.iter().filter(|node| {
+        let node_date = parse_gitlab_datetime(&node.spentAt);
+        node_date == *date
+    })
 }
 
 fn print_timelog(log: &ResponseNode) {
@@ -100,9 +97,20 @@ fn print_timelog(log: &ResponseNode) {
         Style::new().dimmed().paint(log.issue.epic.title.clone()),
         Style::new().bold().paint(log.issue.title.clone()),
     );
+
+    let min_minutes_threshold = 15;
+    if log.timeSpent.as_secs() / 60 < min_minutes_threshold {
+        // msg is aligned with the suspicious data output
+        print_warning("    ^ WARN: Less than 15 minutes! Is this correct?");
+    }
+
     for line in log.summary.lines() {
         println!("             {line}");
     }
+}
+
+fn print_warning(msg: &str) {
+    println!("  {}", Style::new().bold().fg(Color::Yellow).paint(msg));
 }
 
 fn print_day(day: &NaiveDate, data: &Response) {
@@ -110,32 +118,24 @@ fn print_day(day: &NaiveDate, data: &Response) {
 
     let day_print = format!("{day}, {}", day.weekday());
 
-    print!("{}  (total: ", Style::new().bold().paint(day_print));
+    print!("{}  (", Style::new().bold().paint(day_print));
     print_duration(total);
     println!(")");
 
     // Sanity checks and print warnings
     {
-        let hours_threshold = 10;
-        if total.as_secs() > hours_threshold * 60 * 60 {
-            println!(
-                "  {}",
-                Style::new()
-                    .bold()
-                    .fg(Color::Yellow)
-                    .paint("WARN: More than 10 hours per work day! Is this correct?")
+        let max_hours_threshold = 10;
+        if total.as_secs() > max_hours_threshold * 60 * 60 {
+            // msg is aligned with the suspicious data output
+            print_warning(
+                "                ^ WARN: More than 10 hours per work day! Is this correct?",
             );
         }
 
         match day.weekday() {
             Weekday::Sat | Weekday::Sun => {
-                println!(
-                    "  {}",
-                    Style::new()
-                        .bold()
-                        .fg(Color::Yellow)
-                        .paint("WARN: You shouldn't work on the weekend, right?")
-                );
+                // msg is aligned with the suspicious data output
+                print_warning("          ^ WARN: You shouldn't work on the weekend, right?");
             }
             _ => {}
         }

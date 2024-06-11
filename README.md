@@ -9,6 +9,7 @@ for timelogs.
 ## Target Audience
 
 Developers who track their times in GitLab issues. Use it to check if you:
+- accounted less than 15 minutes to an issue (typically a mistake)
 - accounted your full 8 hours of time per day split across multiple
   tickets
 - didn't account time to a Saturday or Sunday (which we normally don't do), and
