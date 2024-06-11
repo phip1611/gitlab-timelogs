@@ -23,8 +23,12 @@ Via cargo:
 - `cargo install --git https://gitlab.vpn.cyberus-technology.de/pschuster/gitlab-timelogs`
 
 Via Nix:
-- Option A: add this flake as input and add the package into your system config
+- Option A: Add `gitlab-overview.nixosModules.default` (referring to the flake
+  input) to the modules of your NixOS configuration, which will add
+  `gitlab-timelogs` to your system-wide packages.
 - Option B: `$ nix shell git+ssh://git@gitlab.vpn.cyberus-technology.de/pschuster/gitlab-timelogs.git\?ref=main`
+- Option C: add this flake as input and add the package into your system config
+
 
 ## Usage
 

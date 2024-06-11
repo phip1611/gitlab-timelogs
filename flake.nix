@@ -23,6 +23,14 @@
         default = import ./shell.nix { inherit pkgs; };
       };
       formatter.x86_64-linux = pkgs.nixpkgs-fmt;
+      nixosModules.default = (
+        { pkgs, ... }:
+        {
+          environment.systemPackages = [
+            self.packages.${pkgs.system}.gitlab-timelogs
+          ];
+        }
+      );
       packages.x86_64-linux = rec {
         default = gitlab-timelogs;
         gitlab-timelogs = import ./nix/build.nix {
