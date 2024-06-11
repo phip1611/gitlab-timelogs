@@ -1,7 +1,8 @@
 [package]
-name = "gitlab-timelog-overview"
+name = "gitlab-timelogs"
 version = "0.1.0"
 edition = "2021"
+publish = false
 
 [profile.release]
 codegen-units = 1
