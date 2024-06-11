@@ -19,7 +19,8 @@ pub struct CliArgs {
     /// You can also use the env variable `GITLAB_USERNAME`.
     #[arg(long = "username", env)]
     gitlab_username: String,
-    /// Token with read access to GitLab API.
+    /// Token with read access to GitLab API. You can get one on
+    /// `https://<gitlab_host>-/user_settings/personal_access_tokens`.
     ///
     /// You can also use the env variable `GITLAB_TOKEN`.
     #[arg(long = "token", env)]

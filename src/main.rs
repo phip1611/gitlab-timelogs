@@ -1,4 +1,5 @@
 use crate::gitlab_api::types::{Response, ResponseNode};
+use chrono::{Datelike, Weekday};
 use clap::Parser;
 use reqwest::blocking::Client;
 use reqwest::header::AUTHORIZATION;
@@ -84,7 +85,7 @@ fn find_logs_of_day<'a>(date: &'a str, res: &'a Response) -> Vec<&'a ResponseNod
 fn print_timelog(log: &ResponseNode) {
     print!("  ");
     print_duration(log.timeSpent);
-    println!("  [{}]: {}", log.issue.epic.title, log.issue.title, );
+    println!("  [{}]: {}", log.issue.epic.title, log.issue.title,);
     for line in log.summary.lines() {
         println!("             {line}");
     }
@@ -92,13 +93,24 @@ fn print_timelog(log: &ResponseNode) {
 
 fn print_day(day: &str, data: &Response) {
     let total = find_total_time_per_day(day, data);
-    print!("{day} (total: ");
+    let day_parsed = chrono::NaiveDate::parse_from_str(day, "%Y-%m-%d").unwrap();
+    print!("{day}, {}  (total: ", day_parsed.weekday());
     print_duration(total);
     println!(")");
 
-    // Sanity checks
-    if total.as_secs() > 10 * 60 * 60 {
-        println!("  WARN: More than 10 hours per work day! Is this correct?");
+    // Sanity checks and print warnings
+    {
+        if total.as_secs() > 10 * 60 * 60 {
+            println!("  WARN: More than 10 hours per work day! Is this correct?");
+        }
+
+
+        match day_parsed.weekday() {
+            Weekday::Sat | Weekday::Sun => {
+                println!("  WARN: You shouldn't work on the weekend, right?");
+            }
+            _ => {}
+        }
     }
 
     for log in find_logs_of_day(day, data) {
