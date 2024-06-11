@@ -1,3 +1,22 @@
+#![deny(
+    clippy::all,
+    clippy::cargo,
+    clippy::nursery,
+    // clippy::restriction,
+    // clippy::pedantic
+)]
+// now allow a few rules which are denied by the above statement
+// --> they are ridiculous and not necessary
+#![allow(
+    clippy::suboptimal_flops,
+    clippy::redundant_pub_crate,
+    clippy::fallible_impl_from
+)]
+// I can't do anything about this; fault of the dependencies
+#![allow(clippy::multiple_crate_versions)]
+#![deny(missing_debug_implementations)]
+#![deny(rustdoc::all)]
+
 use crate::gitlab_api::types::{Response, ResponseNode};
 use chrono::{DateTime, Datelike, Local, NaiveDate, Weekday};
 use clap::Parser;
@@ -114,7 +133,7 @@ fn print_warning(msg: &str) {
 }
 
 fn print_day(day: &NaiveDate, data: &Response) {
-    let total = find_total_time_per_day(&day, data);
+    let total = find_total_time_per_day(day, data);
 
     let day_print = format!("{day}, {}", day.weekday());
 
@@ -141,13 +160,13 @@ fn print_day(day: &NaiveDate, data: &Response) {
         }
     }
 
-    for log in find_logs_of_day(&day, data) {
+    for log in find_logs_of_day(day, data) {
         print_timelog(log);
     }
     println!();
 }
 
-fn duration_to_hhmm(dur: Duration) -> (u64, u64) {
+const fn duration_to_hhmm(dur: Duration) -> (u64, u64) {
     let hours = dur.as_secs() / 60 / 60;
     let remaining_secs = dur.as_secs() - (hours * 60 * 60);
     let minutes = remaining_secs / 60;
