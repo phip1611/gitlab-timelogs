@@ -6,8 +6,7 @@ use reqwest::blocking::Client;
 use reqwest::header::AUTHORIZATION;
 use serde_json::json;
 use std::cmp::min;
-use std::collections::{BTreeMap, BTreeSet, HashMap};
-use std::fmt::{format, Display, Formatter};
+use std::collections::BTreeSet;
 use std::time::Duration;
 
 mod cli;
