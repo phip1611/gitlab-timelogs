@@ -2,6 +2,9 @@
 pub mod types {
     use super::*;
     use serde::Deserialize;
+    use serde_with::serde_as;
+    use std::time::Duration;
+    use serde_with::DurationSeconds;
 
     #[derive(Deserialize, Debug)]
     pub struct Issue {
@@ -9,10 +12,12 @@ pub mod types {
         pub epic: Epic,
     }
 
+    #[serde_as]
     #[derive(Deserialize, Debug)]
-    pub struct ResponseEntry {
+    pub struct ResponseNode {
         pub spentAt: String,
-        pub timeSpent: u64,
+        #[serde_as(as = "DurationSeconds<u64>")]
+        pub timeSpent: Duration,
         pub summary: String,
         pub issue: Issue,
         pub project: Project,
@@ -20,7 +25,7 @@ pub mod types {
 
     #[derive(Deserialize, Debug)]
     pub struct ResponseTimelogs {
-        pub nodes: Vec<ResponseEntry>,
+        pub nodes: Vec<ResponseNode>,
     }
 
     #[derive(Deserialize, Debug)]
