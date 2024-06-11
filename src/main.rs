@@ -88,7 +88,11 @@ fn find_logs_of_day<'a>(date: &'a str, res: &'a Response) -> Vec<&'a ResponseNod
 fn print_timelog(log: &ResponseNode) {
     print!("  ");
     print_duration(log.timeSpent);
-    println!("  [{}]: {}", log.issue.epic.title, log.issue.title,);
+    println!(
+        "  [{}]: {}",
+        Style::new().dimmed().paint(log.issue.epic.title.clone()),
+        Style::new().bold().paint(log.issue.title.clone()),
+    );
     for line in log.summary.lines() {
         println!("             {line}");
     }
@@ -97,7 +101,10 @@ fn print_timelog(log: &ResponseNode) {
 fn print_day(day: &str, data: &Response) {
     let total = find_total_time_per_day(day, data);
     let day_parsed = chrono::NaiveDate::parse_from_str(day, "%Y-%m-%d").unwrap();
-    print!("{day}, {}  (total: ", day_parsed.weekday());
+
+    let day_print = format!("{day}, {}", day_parsed.weekday());
+
+    print!("{}  (total: ", Style::new().bold().paint(day_print));
     print_duration(total);
     println!(")");
 
@@ -143,7 +150,8 @@ fn duration_to_hhmm(dur: Duration) -> (u64, u64) {
 
 fn print_duration(duration: Duration) {
     let (hours, minutes) = duration_to_hhmm(duration);
-    print!("{hours:>2}h {minutes:02}m")
+    let print_str = format!("{hours:>2}h {minutes:02}m");
+    print!("{}", Style::new().bold().fg(Color::Blue).paint(print_str));
 }
 #[cfg(test)]
 mod tests {
