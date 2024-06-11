@@ -1,3 +1,4 @@
+use std::cmp::min;
 use crate::gitlab_api::types::{Response, ResponseNode};
 use chrono::{Datelike, Weekday};
 use clap::Parser;
@@ -58,6 +59,7 @@ fn find_dates(res: &Response, days_n: usize) -> BTreeSet<&str> {
         .map(|node| extract_yyyymmdd(&node.spentAt))
         .collect::<BTreeSet<_>>();
 
+    let days_n = min(days.len(), days_n);
     let skip = days.len() - days_n;
 
     days.into_iter().skip(skip).collect()
