@@ -398,6 +398,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "clap",
+ "nu-ansi-term",
  "reqwest",
  "serde",
  "serde_json",
@@ -702,6 +703,15 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "tempfile",
+]
+
+[[package]]
+name = "nu-ansi-term"
+version = "0.50.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dd2800e1520bdc966782168a627aa5d1ad92e33b984bf7c7615d31280c83ff14"
+dependencies = [
+ "windows-sys 0.48.0",
 ]
 
 [[package]]

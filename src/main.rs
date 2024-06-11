@@ -1,10 +1,11 @@
-use std::cmp::min;
 use crate::gitlab_api::types::{Response, ResponseNode};
 use chrono::{Datelike, Weekday};
 use clap::Parser;
+use nu_ansi_term::{Color, Style};
 use reqwest::blocking::Client;
 use reqwest::header::AUTHORIZATION;
 use serde_json::json;
+use std::cmp::min;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::fmt::{format, Display, Formatter};
 use std::time::Duration;
@@ -102,14 +103,26 @@ fn print_day(day: &str, data: &Response) {
 
     // Sanity checks and print warnings
     {
-        if total.as_secs() > 10 * 60 * 60 {
-            println!("  WARN: More than 10 hours per work day! Is this correct?");
+        let hours_threshold = 10;
+        if total.as_secs() > hours_threshold * 60 * 60 {
+            println!(
+                "  {}",
+                Style::new()
+                    .bold()
+                    .fg(Color::Yellow)
+                    .paint("WARN: More than 10 hours per work day! Is this correct?")
+            );
         }
-
 
         match day_parsed.weekday() {
             Weekday::Sat | Weekday::Sun => {
-                println!("  WARN: You shouldn't work on the weekend, right?");
+                println!(
+                    "  {}",
+                    Style::new()
+                        .bold()
+                        .fg(Color::Yellow)
+                        .paint("WARN: You shouldn't work on the weekend, right?")
+                );
             }
             _ => {}
         }
