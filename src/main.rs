@@ -1,5 +1,5 @@
 use crate::gitlab_api::types::{Response, ResponseNode};
-use chrono::{Datelike, Weekday};
+use chrono::{DateTime, Datelike, Local, Weekday, NaiveDate};
 use clap::Parser;
 use nu_ansi_term::{Color, Style};
 use reqwest::blocking::Client;
@@ -41,22 +41,32 @@ fn main() {
         .unwrap();
 
     for day in find_dates(&res, cli.days()) {
-        print_day(day, &res);
+        print_day(&day, &res);
     }
 }
 
-/// Returns a sorted list from oldest to newest date with data for the last `days` days.
-fn find_dates(res: &Response, days_n: usize) -> BTreeSet<&str> {
-    fn extract_yyyymmdd(timestamp: &str) -> &str {
-        &timestamp[0..10]
-    }
+/// Parses the UTC timestring coming from GitLab in the local timezone of
+/// the user. This is necessary so that entries accoutned to a Monday on `00:00`
+/// in CEST are not displayed as Sunday.
+///
+/// # Parameters
+/// - `datestring` in GitLab format such as `"2024-06-09T22:00:00Z"`.
+fn parse_gitlab_datetime(datestring: &str) -> NaiveDate {
+    let date = DateTime::parse_from_rfc3339(datestring).unwrap();
+    let date = DateTime::<Local>::from(date);
+    // simplify
+    date.naive_local().date()
+}
 
+/// Returns a sorted list from oldest to newest date with data for the last
+/// `days_n` days.
+fn find_dates(res: &Response, days_n: usize) -> BTreeSet<NaiveDate> {
     let days = res
         .data
         .timelogs
         .nodes
         .iter()
-        .map(|node| extract_yyyymmdd(&node.spentAt))
+        .map(|node| parse_gitlab_datetime(&node.spentAt))
         .collect::<BTreeSet<_>>();
 
     let days_n = min(days.len(), days_n);
@@ -65,23 +75,21 @@ fn find_dates(res: &Response, days_n: usize) -> BTreeSet<&str> {
     days.into_iter().skip(skip).collect()
 }
 
-fn find_total_time_per_day(date: &str, res: &Response) -> Duration {
-    res.data
-        .timelogs
-        .nodes
-        .iter()
-        .filter(|node| node.spentAt.starts_with(date))
+fn find_total_time_per_day(date: &NaiveDate, res: &Response) -> Duration {
+    find_logs_of_day(date, res)
         .map(|node| node.timeSpent)
         .sum()
 }
 
-fn find_logs_of_day<'a>(date: &'a str, res: &'a Response) -> Vec<&'a ResponseNode> {
+fn find_logs_of_day<'a>(date: &'a NaiveDate, res: &'a Response) -> impl Iterator<Item = &'a ResponseNode> {
     res.data
         .timelogs
         .nodes
         .iter()
-        .filter(|node| node.spentAt.starts_with(date))
-        .collect()
+        .filter(|node| {
+            let node_date = parse_gitlab_datetime(&node.spentAt);
+            node_date == *date
+        })
 }
 
 fn print_timelog(log: &ResponseNode) {
@@ -97,11 +105,10 @@ fn print_timelog(log: &ResponseNode) {
     }
 }
 
-fn print_day(day: &str, data: &Response) {
-    let total = find_total_time_per_day(day, data);
-    let day_parsed = chrono::NaiveDate::parse_from_str(day, "%Y-%m-%d").unwrap();
+fn print_day(day: &NaiveDate, data: &Response) {
+    let total = find_total_time_per_day(&day, data);
 
-    let day_print = format!("{day}, {}", day_parsed.weekday());
+    let day_print = format!("{day}, {}", day.weekday());
 
     print!("{}  (total: ", Style::new().bold().paint(day_print));
     print_duration(total);
@@ -120,7 +127,7 @@ fn print_day(day: &str, data: &Response) {
             );
         }
 
-        match day_parsed.weekday() {
+        match day.weekday() {
             Weekday::Sat | Weekday::Sun => {
                 println!(
                     "  {}",
@@ -134,7 +141,7 @@ fn print_day(day: &str, data: &Response) {
         }
     }
 
-    for log in find_logs_of_day(day, data) {
+    for log in find_logs_of_day(&day, data) {
         print_timelog(log);
     }
     println!();
