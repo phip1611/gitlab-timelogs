@@ -1,4 +1,5 @@
 use clap::Parser;
+use std::num::NonZeroUsize;
 
 /// CLI Arguments for `clap`. If not present, the values are taken from
 /// environment variables.
@@ -8,18 +9,26 @@ use clap::Parser;
     about = "Tool to fetch the timelogs from the GitLab API and display them in a helpful way."
 )]
 pub struct CliArgs {
-    /// The GitLab host without `https://`. For example `gitlab.domain.tld`
+    /// The GitLab host without `https://`. For example `gitlab.domain.tld`.
+    ///
+    /// You can also use the env variable `GITLAB_HOST`.
     #[arg(long = "host", env)]
     gitlab_host: String,
-    /// Your GitLab username
+    /// Your GitLab username.
+    ///
+    /// You can also use the env variable `GITLAB_USERNAME`.
     #[arg(long = "username", env)]
     gitlab_username: String,
-    /// Token with read access to GitLab API
+    /// Token with read access to GitLab API.
+    ///
+    /// You can also use the env variable `GITLAB_TOKEN`.
     #[arg(long = "token", env)]
     gitlab_token: String,
-    /// Amount of entries to fetch (from the end, i.e. freshest data).
-    #[arg(long = "last", env, default_value = "20")]
-    gitlab_last: usize,
+    /// How many days (starting with today = 1).
+    ///
+    /// You can also use the env variable `GITLAB_DAYS`.
+    #[arg(long = "days", env, default_value = "1")]
+    gitlab_days: NonZeroUsize,
 }
 
 impl CliArgs {
@@ -32,7 +41,7 @@ impl CliArgs {
     pub fn token(&self) -> &str {
         &self.gitlab_token
     }
-    pub fn last(&self) -> usize {
-        self.gitlab_last
+    pub fn days(&self) -> usize {
+        self.gitlab_days.into()
     }
 }

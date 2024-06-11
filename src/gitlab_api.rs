@@ -3,8 +3,8 @@ pub mod types {
     use super::*;
     use serde::Deserialize;
     use serde_with::serde_as;
-    use std::time::Duration;
     use serde_with::DurationSeconds;
+    use std::time::Duration;
 
     #[derive(Deserialize, Debug)]
     pub struct Issue {

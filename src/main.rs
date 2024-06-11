@@ -12,11 +12,17 @@ mod gitlab_api;
 
 const GRAPHQL_TEMPLATE: &str = include_str!("./gitlab-query.graphql");
 
+/// Safe estimation of time tracking entries per day.
+const ENTRIES_PER_DAY_ESTIMATE: usize = 10;
+
 fn main() {
     let cli = cli::CliArgs::parse();
     let graphql_query = GRAPHQL_TEMPLATE
         .replace("%USERNAME%", cli.username())
-        .replace("%LAST%", &format!("{}", cli.last()));
+        .replace(
+            "%LAST%",
+            &format!("{}", cli.days() * ENTRIES_PER_DAY_ESTIMATE),
+        );
     let payload = json!({ "query": graphql_query });
 
     let authorization = format!("Bearer {token}", token = cli.token());
@@ -32,7 +38,7 @@ fn main() {
         .json::<Response>()
         .unwrap();
 
-    let all_dates = find_dates(&res);
+    let all_dates = find_dates(&res, cli.days());
 
     for date in &all_dates {
         let total_time = find_total_time_per_day(date, &res);
@@ -66,25 +72,40 @@ fn main() {
     }
 }
 
-fn find_dates(res: &Response) -> BTreeSet<&str> {
-    res
+/// Returns a sorted list from oldest to newest date with data for the last `days` days.
+fn find_dates(res: &Response, days_n: usize) -> BTreeSet<&str> {
+    fn extract_yyyymmdd(timestamp: &str) -> &str {
+        &timestamp[0..10]
+    }
+
+    let days = res
         .data
         .timelogs
         .nodes
         .iter()
-        .map(|node| &node.spentAt[0..10])
-        .collect::<BTreeSet<_>>()
+        .map(|node| extract_yyyymmdd(&node.spentAt))
+        .collect::<BTreeSet<_>>();
+
+    let skip = days.len() - days_n;
+
+    days.into_iter().skip(skip).collect()
 }
 
 fn find_total_time_per_day(date: &str, res: &Response) -> Duration {
-    res.data.timelogs.nodes.iter()
+    res.data
+        .timelogs
+        .nodes
+        .iter()
         .filter(|node| node.spentAt.starts_with(date))
         .map(|node| node.timeSpent)
         .sum()
 }
 
 fn find_logs_of_day<'a>(date: &'a str, res: &'a Response) -> Vec<&'a ResponseNode> {
-    res.data.timelogs.nodes.iter()
+    res.data
+        .timelogs
+        .nodes
+        .iter()
         .filter(|node| node.spentAt.starts_with(date))
         .collect()
 }
