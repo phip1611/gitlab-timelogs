@@ -4,7 +4,7 @@ use reqwest::blocking::Client;
 use reqwest::header::AUTHORIZATION;
 use serde_json::json;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
-use std::fmt::format;
+use std::fmt::{format, Display, Formatter};
 use std::time::Duration;
 
 mod cli;
@@ -38,37 +38,8 @@ fn main() {
         .json::<Response>()
         .unwrap();
 
-    let all_dates = find_dates(&res, cli.days());
-
-    for date in &all_dates {
-        let total_time = find_total_time_per_day(date, &res);
-        print!("|- {date} ");
-        // TODO support .5h
-        let total_time_minutes = total_time.as_secs() / 60;
-        if total_time_minutes >= 60 {
-            print!("(total time: {:>2} hours)", total_time_minutes / 60);
-        } else {
-            print!("(total time: {:>2} minutes)", total_time_minutes);
-        }
-        println!();
-
-        if total_time_minutes / 60 > 10 {
-            println!("+++ WARNING +++");
-        }
-
-        let logs_of_day = find_logs_of_day(date, &res);
-        for node in logs_of_day {
-            print!(" \\- ");
-            let minutes = node.timeSpent.as_secs() / 60;
-            if minutes >= 60 {
-                print!("{:>2}h", minutes / 60);
-            } else {
-                print!("{:2>}m", minutes);
-            }
-            print!(" {} [{}]", node.issue.title, node.issue.epic.title);
-            println!();
-            println!("  |   - {}", node.summary.trim().replace("\n", "<br>"));
-        }
+    for day in find_dates(&res, cli.days()) {
+        print_day(day, &res);
     }
 }
 
@@ -108,4 +79,59 @@ fn find_logs_of_day<'a>(date: &'a str, res: &'a Response) -> Vec<&'a ResponseNod
         .iter()
         .filter(|node| node.spentAt.starts_with(date))
         .collect()
+}
+
+fn print_timelog(log: &ResponseNode) {
+    print!("  ");
+    print_duration(log.timeSpent);
+    println!("  [{}]: {}", log.issue.epic.title, log.issue.title, );
+    for line in log.summary.lines() {
+        println!("             {line}");
+    }
+}
+
+fn print_day(day: &str, data: &Response) {
+    {
+        let total = find_total_time_per_day(day, data);
+        print!("{day} (total: ");
+        print_duration(total);
+        println!(")");
+    }
+
+    for log in find_logs_of_day(day, data) {
+        print_timelog(log);
+    }
+    println!();
+}
+
+fn duration_to_hhmm(dur: Duration) -> (u64, u64) {
+    let hours = dur.as_secs() / 60 / 60;
+    let remaining_secs = dur.as_secs() - (hours * 60 * 60);
+    let minutes = remaining_secs / 60;
+    (hours, minutes)
+}
+
+fn print_duration(duration: Duration) {
+    let (hours, minutes) = duration_to_hhmm(duration);
+    print!("{hours:>2}h {minutes:02}m")
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_duration_to_hhmm() {
+        assert_eq!(duration_to_hhmm(Duration::from_secs(0)), (0, 0));
+        assert_eq!(duration_to_hhmm(Duration::from_secs(59)), (0, 0));
+        assert_eq!(duration_to_hhmm(Duration::from_secs(60)), (0, 1));
+        assert_eq!(duration_to_hhmm(Duration::from_secs(61)), (0, 1));
+        assert_eq!(duration_to_hhmm(Duration::from_secs(119)), (0, 1));
+        assert_eq!(duration_to_hhmm(Duration::from_secs(120)), (0, 2));
+        let h = 3;
+        let m = 7;
+        assert_eq!(
+            duration_to_hhmm(Duration::from_secs(h * 60 * 60 + m * 60)),
+            (h, m)
+        );
+    }
 }
