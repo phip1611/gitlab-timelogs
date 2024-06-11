@@ -59,8 +59,21 @@ fn main() {
         .json::<Response>()
         .unwrap();
 
-    for day in find_dates(&res, cli.days()) {
-        print_day(&day, &res);
+    let dates = find_dates(&res, cli.days());
+
+    if dates.is_empty() {
+        print_warning(
+            "Empty response. Is the username correct? Does the token has read permission?",
+            0,
+        );
+    } else {
+        for (i, day) in dates.iter().enumerate() {
+            print_day(&day, &res);
+            let is_last = i == dates.len() - 1;
+            if !is_last {
+                println!();
+            }
+        }
     }
 }
 
@@ -120,7 +133,7 @@ fn print_timelog(log: &ResponseNode) {
     let min_minutes_threshold = 15;
     if log.timeSpent.as_secs() / 60 < min_minutes_threshold {
         // msg is aligned with the suspicious data output
-        print_warning("    ^ WARN: Less than 15 minutes! Is this correct?");
+        print_warning("^ WARN: Less than 15 minutes! Is this correct?", 6);
     }
 
     for line in log.summary.lines() {
@@ -128,8 +141,12 @@ fn print_timelog(log: &ResponseNode) {
     }
 }
 
-fn print_warning(msg: &str) {
-    println!("  {}", Style::new().bold().fg(Color::Yellow).paint(msg));
+fn print_warning(msg: &str, indention: usize) {
+    println!(
+        "{indention}{msg}",
+        indention = " ".repeat(indention),
+        msg = Style::new().bold().fg(Color::Yellow).paint(msg),
+    );
 }
 
 fn print_day(day: &NaiveDate, data: &Response) {
@@ -147,14 +164,15 @@ fn print_day(day: &NaiveDate, data: &Response) {
         if total.as_secs() > max_hours_threshold * 60 * 60 {
             // msg is aligned with the suspicious data output
             print_warning(
-                "                ^ WARN: More than 10 hours per work day! Is this correct?",
+                "^ WARN: More than 10 hours! Is this correct?",
+                18,
             );
         }
 
         match day.weekday() {
             Weekday::Sat | Weekday::Sun => {
                 // msg is aligned with the suspicious data output
-                print_warning("          ^ WARN: You shouldn't work on the weekend, right?");
+                print_warning("^ WARN: You shouldn't work on the weekend, right?", 12);
             }
             _ => {}
         }
@@ -163,7 +181,6 @@ fn print_day(day: &NaiveDate, data: &Response) {
     for log in find_logs_of_day(day, data) {
         print_timelog(log);
     }
-    println!();
 }
 
 const fn duration_to_hhmm(dur: Duration) -> (u64, u64) {
