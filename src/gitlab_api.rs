@@ -52,7 +52,7 @@ pub mod types {
 
     #[derive(Deserialize, Debug)]
     pub struct Group {
-        pub name: String,
+        pub fullName: String,
     }
 
     #[derive(Deserialize, Debug)]

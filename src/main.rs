@@ -176,7 +176,7 @@ fn print_timelog(log: &ResponseNode) {
         epic_key = Style::new().dimmed().paint("Epic:"),
         epic_name = Style::new().bold().paint(epic_name),
         group_key = Style::new().dimmed().paint("Group:"),
-        group_name = Style::new().bold().paint(&log.project.group.name),
+        group_name = Style::new().bold().paint(&log.project.group.fullName),
         whitespace = " ".repeat(11),
     );
 
