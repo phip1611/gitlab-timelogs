@@ -152,22 +152,33 @@ fn print_timelog(log: &ResponseNode) {
     print!("  ");
     print_duration(log.timeSpent);
     println!(
-        "  [{}]: {}",
-        Style::new().dimmed().paint(
-            log.issue
-                .epic
-                .as_ref()
-                .map(|e| e.title.as_str())
-                .unwrap_or("<no epic>")
-        ),
-        Style::new().bold().paint(log.issue.title.clone()),
+        "  {issue_name}",
+        issue_name = Style::new()
+            .bold()
+            .fg(Color::Green)
+            .paint(log.issue.title.clone()),
     );
-
     let min_minutes_threshold = 15;
     if log.timeSpent.as_secs() / 60 < min_minutes_threshold {
         // msg is aligned with the suspicious data output
         print_warning("^ WARN: Less than 15 minutes! Is this correct?", 6);
     }
+
+    // Print issue metadata.
+    let epic_name = log
+        .issue
+        .epic
+        .as_ref()
+        .map(|e| e.title.as_str())
+        .unwrap_or("<no epic>");
+    println!(
+        "{whitespace}[{epic_key} {epic_name}, {group_key} {group_name}]",
+        epic_key = Style::new().dimmed().paint("Epic:"),
+        epic_name = Style::new().bold().paint(epic_name),
+        group_key = Style::new().dimmed().paint("Group:"),
+        group_name = Style::new().bold().paint(&log.project.group.name),
+        whitespace = " ".repeat(11),
+    );
 
     for line in log.summary.lines() {
         println!("             {line}");
