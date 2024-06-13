@@ -150,7 +150,7 @@ fn find_logs_of_day<'a>(
 
 fn print_timelog(log: &ResponseNode) {
     print!("  ");
-    print_duration(log.timeSpent);
+    print_duration(log.timeSpent, Color::Magenta);
     println!(
         "  {issue_name}",
         issue_name = Style::new()
@@ -199,7 +199,7 @@ fn print_day(day: &NaiveDate, data: &Response) {
     let day_print = format!("{day}, {}", day.weekday());
 
     print!("{}  (", Style::new().bold().paint(day_print));
-    print_duration(total);
+    print_duration(total, Color::Blue);
     println!(")");
 
     // Sanity checks and print warnings
@@ -231,11 +231,12 @@ const fn duration_to_hhmm(dur: Duration) -> (u64, u64) {
     (hours, minutes)
 }
 
-fn print_duration(duration: Duration) {
+fn print_duration(duration: Duration, color: Color) {
     let (hours, minutes) = duration_to_hhmm(duration);
     let print_str = format!("{hours:>2}h {minutes:02}m");
-    print!("{}", Style::new().bold().fg(Color::Blue).paint(print_str));
+    print!("{}", Style::new().bold().fg(color).paint(print_str));
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
