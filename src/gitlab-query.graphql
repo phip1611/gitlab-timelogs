@@ -1,5 +1,5 @@
 {
-  timelogs(username: "%USERNAME%", last: %LAST%) {
+  timelogs(username: "%USERNAME%", last: 500, before: "%BEFORE%") {
     nodes {
       spentAt
       timeSpent
@@ -15,6 +15,10 @@
           name
         }
       }
+    }
+    pageInfo {
+      hasPreviousPage
+      startCursor
     }
   }
 }

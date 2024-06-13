@@ -9,7 +9,7 @@ pub mod types {
     #[derive(Deserialize, Debug)]
     pub struct Issue {
         pub title: String,
-        pub epic: Epic,
+        pub epic: Option<Epic>,
     }
 
     #[serde_as]
@@ -24,8 +24,15 @@ pub mod types {
     }
 
     #[derive(Deserialize, Debug)]
+    pub struct ResponsePageInfo {
+        pub hasPreviousPage: bool,
+        pub startCursor: String,
+    }
+
+    #[derive(Deserialize, Debug)]
     pub struct ResponseTimelogs {
         pub nodes: Vec<ResponseNode>,
+        pub pageInfo: ResponsePageInfo,
     }
 
     #[derive(Deserialize, Debug)]

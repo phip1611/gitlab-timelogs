@@ -33,32 +33,59 @@ mod gitlab_api;
 
 const GRAPHQL_TEMPLATE: &str = include_str!("./gitlab-query.graphql");
 
-/// Safe estimation of time tracking entries per day.
-const ENTRIES_PER_DAY_ESTIMATE: usize = 10;
-
-fn main() {
-    let cli = cli::CliArgs::parse();
+fn fetch_result(username: &str, host: &str, token: &str, before: Option<&str>) -> Response {
     let graphql_query = GRAPHQL_TEMPLATE
-        .replace("%USERNAME%", cli.username())
-        .replace(
-            "%LAST%",
-            &format!("{}", cli.days() * ENTRIES_PER_DAY_ESTIMATE),
-        );
+        .replace("%USERNAME%", username)
+        .replace("%BEFORE%", before.unwrap_or_default());
     let payload = json!({ "query": graphql_query });
 
-    let authorization = format!("Bearer {token}", token = cli.token());
-    let url = format!("https://{host}/api/graphql", host = cli.host());
+    let authorization = format!("Bearer {token}", token = token);
+    let url = format!("https://{host}/api/graphql", host = host);
     let client = Client::new();
 
-    let res = client
+    client
         .post(url)
         .header(AUTHORIZATION, authorization)
         .json(&payload)
         .send()
         .unwrap()
         .json::<Response>()
-        .unwrap();
+        .unwrap()
+}
 
+/// Fetches all results from the API. If necessary and requested, this also uses
+/// the pagination feature to get really all results. This however takes some
+/// more time.
+fn fetch_all_results(username: &str, host: &str, token: &str, use_pagination: bool) -> Response {
+    let base = fetch_result(username, host, token, None);
+
+    if !use_pagination {
+        return base;
+    }
+
+    let mut aggregated = base;
+    while aggregated.data.timelogs.pageInfo.hasPreviousPage {
+        let mut next = fetch_result(
+            username,
+            host,
+            token,
+            Some(&aggregated.data.timelogs.pageInfo.startCursor),
+        );
+
+        // Ordering here is not that important, happens later anyway.
+        next.data
+            .timelogs
+            .nodes
+            .extend(aggregated.data.timelogs.nodes);
+        aggregated = next;
+    }
+    aggregated
+}
+
+fn main() {
+    let cli = cli::CliArgs::parse();
+
+    let res = fetch_all_results(cli.username(), cli.host(), cli.token(), cli.pagination());
     let dates = find_dates(&res, cli.days());
 
     if dates.is_empty() {
@@ -68,7 +95,7 @@ fn main() {
         );
     } else {
         for (i, day) in dates.iter().enumerate() {
-            print_day(&day, &res);
+            print_day(day, &res);
             let is_last = i == dates.len() - 1;
             if !is_last {
                 println!();
@@ -126,7 +153,13 @@ fn print_timelog(log: &ResponseNode) {
     print_duration(log.timeSpent);
     println!(
         "  [{}]: {}",
-        Style::new().dimmed().paint(log.issue.epic.title.clone()),
+        Style::new().dimmed().paint(
+            log.issue
+                .epic
+                .as_ref()
+                .map(|e| e.title.as_str())
+                .unwrap_or("<no epic>")
+        ),
         Style::new().bold().paint(log.issue.title.clone()),
     );
 
@@ -163,10 +196,7 @@ fn print_day(day: &NaiveDate, data: &Response) {
         let max_hours_threshold = 10;
         if total.as_secs() > max_hours_threshold * 60 * 60 {
             // msg is aligned with the suspicious data output
-            print_warning(
-                "^ WARN: More than 10 hours! Is this correct?",
-                18,
-            );
+            print_warning("^ WARN: More than 10 hours! Is this correct?", 18);
         }
 
         match day.weekday() {
