@@ -265,6 +265,16 @@ fn print_week(week: u32, dates: &BTreeSet<NaiveDate>, data: &Response) {
         delim = week_style.paint("======================"),
         week_print = week_style.paint(week_print)
     );
+    let total_week_time = dates
+        .iter()
+        .map(|date| calc_total_time_per_day(date, data))
+        .sum::<Duration>();
+    print!(
+        "{total_time_key}       ",
+        total_time_key = Style::new().bold().paint("Total time:")
+    );
+    print_duration(total_week_time, Color::Blue);
+    println!();
     println!();
 
     for (i, date) in dates.iter().enumerate() {
