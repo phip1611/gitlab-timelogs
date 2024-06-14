@@ -25,7 +25,7 @@ use reqwest::blocking::Client;
 use reqwest::header::AUTHORIZATION;
 use serde_json::json;
 use std::cmp::min;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::time::Duration;
 
 mod cli;
@@ -33,6 +33,8 @@ mod gitlab_api;
 
 const GRAPHQL_TEMPLATE: &str = include_str!("./gitlab-query.graphql");
 
+/// Performs a single request against the GitLab API, getting exactly one page
+/// of the paged data source.
 fn fetch_result(username: &str, host: &str, token: &str, before: Option<&str>) -> Response {
     let graphql_query = GRAPHQL_TEMPLATE
         .replace("%USERNAME%", username)
@@ -86,7 +88,7 @@ fn main() {
     let cli = cli::CliArgs::parse();
 
     let res = fetch_all_results(cli.username(), cli.host(), cli.token(), cli.pagination());
-    let dates = find_dates(&res, cli.days());
+    let dates = aggregate_and_sort_dates(&res, cli.days());
 
     if dates.is_empty() {
         print_warning(
@@ -94,9 +96,10 @@ fn main() {
             0,
         );
     } else {
-        for (i, day) in dates.iter().enumerate() {
-            print_day(day, &res);
+        for (i, (&week, dates_per_week)) in dates.iter().enumerate() {
             let is_last = i == dates.len() - 1;
+
+            print_week(week, dates_per_week, &res);
             if !is_last {
                 println!();
             }
@@ -104,20 +107,7 @@ fn main() {
     }
 }
 
-/// Parses the UTC timestring coming from GitLab in the local timezone of
-/// the user. This is necessary so that entries accoutned to a Monday on `00:00`
-/// in CEST are not displayed as Sunday.
-///
-/// # Parameters
-/// - `datestring` in GitLab format such as `"2024-06-09T22:00:00Z"`.
-fn parse_gitlab_datetime(datestring: &str) -> NaiveDate {
-    let date = DateTime::parse_from_rfc3339(datestring).unwrap();
-    let date = DateTime::<Local>::from(date);
-    // simplify
-    date.naive_local().date()
-}
-
-/// Returns a sorted list from oldest to newest date with data for the last
+/// Returns a sorted list from oldest to newest date with records for the last
 /// `days_n` days.
 fn find_dates(res: &Response, days_n: usize) -> BTreeSet<NaiveDate> {
     let days = res
@@ -134,7 +124,50 @@ fn find_dates(res: &Response, days_n: usize) -> BTreeSet<NaiveDate> {
     days.into_iter().skip(skip).collect()
 }
 
-fn find_total_time_per_day(date: &NaiveDate, res: &Response) -> Duration {
+/// Aggregates and sorts the dates with records from the response from GitLab
+/// so that we get a sorted collection of weeks and a sorted collection of each
+/// day with entries per week.
+///
+/// This only takes the last `days_n` days into account.
+fn aggregate_and_sort_dates(
+    response: &Response,
+    days_n: usize,
+) -> BTreeMap<u32, BTreeSet<NaiveDate>> {
+    let mut week_to_dates_map = BTreeMap::new();
+
+    let dates = find_dates(response, days_n);
+
+    for date in dates.iter().copied() {
+        let week = date.iso_week().week();
+        week_to_dates_map
+            .entry(week)
+            .and_modify(|set: &mut BTreeSet<NaiveDate>| {
+                set.insert(date);
+            })
+            .or_insert_with(|| {
+                let mut set = BTreeSet::new();
+                set.insert(date);
+                set
+            });
+    }
+
+    week_to_dates_map
+}
+
+/// Parses the UTC timestring coming from GitLab in the local timezone of
+/// the user. This is necessary so that entries accoutned to a Monday on `00:00`
+/// in CEST are not displayed as Sunday.
+///
+/// # Parameters
+/// - `datestring` in GitLab format such as `"2024-06-09T22:00:00Z"`.
+fn parse_gitlab_datetime(datestring: &str) -> NaiveDate {
+    let date = DateTime::parse_from_rfc3339(datestring).unwrap();
+    let date = DateTime::<Local>::from(date);
+    // simplify
+    date.naive_local().date()
+}
+
+fn calc_total_time_per_day(date: &NaiveDate, res: &Response) -> Duration {
     find_logs_of_day(date, res).map(|node| node.timeSpent).sum()
 }
 
@@ -193,8 +226,8 @@ fn print_warning(msg: &str, indention: usize) {
     );
 }
 
-fn print_day(day: &NaiveDate, data: &Response) {
-    let total = find_total_time_per_day(day, data);
+fn print_date(day: &NaiveDate, data: &Response) {
+    let total = calc_total_time_per_day(day, data);
 
     let day_print = format!("{day}, {}", day.weekday());
 
@@ -221,6 +254,26 @@ fn print_day(day: &NaiveDate, data: &Response) {
 
     for log in find_logs_of_day(day, data) {
         print_timelog(log);
+    }
+}
+
+fn print_week(week: u32, dates: &BTreeSet<NaiveDate>, data: &Response) {
+    let week_style = Style::new().bold();
+    let week_print = format!("WEEK {week}");
+    println!(
+        "{delim} {week_print} {delim}",
+        delim = week_style.paint("======================"),
+        week_print = week_style.paint(week_print)
+    );
+    println!();
+
+    for (i, date) in dates.iter().enumerate() {
+        print_date(date, data);
+
+        let is_last = i == dates.len() - 1;
+        if !is_last {
+            println!();
+        }
     }
 }
 
