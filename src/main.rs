@@ -33,6 +33,14 @@ mod gitlab_api;
 
 const GRAPHQL_TEMPLATE: &str = include_str!("./gitlab-query.graphql");
 
+/// Creates a terminal escape sequence of a link.
+///
+/// See <https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda>
+fn to_terminal_link_sequence(target: &str, name: &str) -> String {
+    let escape = '\u{1b}';
+    format!("{escape}]8;;{target}{escape}\\{name}{escape}]8;;{escape}\\")
+}
+
 /// Performs a single request against the GitLab API, getting exactly one page
 /// of the paged data source.
 fn fetch_result(username: &str, host: &str, token: &str, before: Option<&str>) -> Response {
@@ -185,12 +193,14 @@ fn find_logs_of_day<'a>(
 fn print_timelog(log: &ResponseNode) {
     print!("  ");
     print_duration(log.timeSpent, Color::Magenta);
+    let terminal_link = to_terminal_link_sequence(&log.issue.webUrl, "[Link]");
     println!(
-        "  {issue_name}",
+        "  {issue_name} {terminal_link}",
         issue_name = Style::new()
             .bold()
             .fg(Color::Green)
             .paint(log.issue.title.clone()),
+        terminal_link = Style::new().dimmed().paint(&terminal_link)
     );
     let min_minutes_threshold = 15;
     if log.timeSpent.as_secs() / 60 < min_minutes_threshold {

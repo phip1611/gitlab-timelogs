@@ -6,6 +6,7 @@
       summary
       issue {
         title
+        webUrl
         epic {
           title
         }

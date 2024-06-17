@@ -9,6 +9,8 @@ pub mod types {
     #[derive(Deserialize, Debug)]
     pub struct Issue {
         pub title: String,
+        /// Full http link to issue.
+        pub webUrl: String,
         pub epic: Option<Epic>,
     }
 
