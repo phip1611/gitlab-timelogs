@@ -132,15 +132,16 @@ fn find_dates(res: &Response, days_n: usize) -> BTreeSet<NaiveDate> {
 fn aggregate_and_sort_dates(
     response: &Response,
     days_n: usize,
-) -> BTreeMap<u32, BTreeSet<NaiveDate>> {
+) -> BTreeMap<(i32 /* year */, u32 /* iso week */), BTreeSet<NaiveDate>> {
     let mut week_to_dates_map = BTreeMap::new();
 
     let dates = find_dates(response, days_n);
 
     for date in dates.iter().copied() {
         let week = date.iso_week().week();
+        let key = (date.year(), week);
         week_to_dates_map
-            .entry(week)
+            .entry(key)
             .and_modify(|set: &mut BTreeSet<NaiveDate>| {
                 set.insert(date);
             })
@@ -257,9 +258,13 @@ fn print_date(day: &NaiveDate, data: &Response) {
     }
 }
 
-fn print_week(week: u32, dates: &BTreeSet<NaiveDate>, data: &Response) {
+fn print_week(
+    week: (i32 /* year */, u32 /* iso week */),
+    dates: &BTreeSet<NaiveDate>,
+    data: &Response,
+) {
     let week_style = Style::new().bold();
-    let week_print = format!("WEEK {week}");
+    let week_print = format!("WEEK {}-W{:>2}", week.0, week.1);
     println!(
         "{delim} {week_print} {delim}",
         delim = week_style.paint("======================"),
