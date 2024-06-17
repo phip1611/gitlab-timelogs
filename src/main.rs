@@ -205,6 +205,8 @@ fn print_timelog(log: &ResponseNode) {
         .as_ref()
         .map(|e| e.title.as_str())
         .unwrap_or("<no epic>");
+    let whitespace = " ".repeat(11);
+    println!("{whitespace}{link}", link = Style::new().dimmed().paint(&log.issue.webUrl));
     println!(
         "{whitespace}[{epic_key} {epic_name}, {group_key} {group_name}]",
         epic_key = Style::new().dimmed().paint("Epic:"),
