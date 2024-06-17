@@ -207,14 +207,16 @@ fn print_timelog(log: &ResponseNode) {
         .unwrap_or("<no epic>");
     let whitespace = " ".repeat(11);
     println!("{whitespace}{link}", link = Style::new().dimmed().paint(&log.issue.webUrl));
-    println!(
-        "{whitespace}[{epic_key} {epic_name}, {group_key} {group_name}]",
-        epic_key = Style::new().dimmed().paint("Epic:"),
-        epic_name = Style::new().bold().paint(epic_name),
-        group_key = Style::new().dimmed().paint("Group:"),
-        group_name = Style::new().bold().paint(&log.project.group.fullName),
-        whitespace = " ".repeat(11),
-    );
+    if let Some(group) = &log.project.group {
+        println!(
+            "{whitespace}[{epic_key} {epic_name}, {group_key} {group_name}]",
+            epic_key = Style::new().dimmed().paint("Epic:"),
+            epic_name = Style::new().bold().paint(epic_name),
+            group_key = Style::new().dimmed().paint("Group:"),
+            group_name = Style::new().bold().paint(&group.fullName),
+            whitespace = " ".repeat(11),
+        );
+    }
 
     for line in log.summary.lines() {
         println!("             {line}");

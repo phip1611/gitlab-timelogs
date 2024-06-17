@@ -49,7 +49,7 @@ pub mod types {
 
     #[derive(Deserialize, Debug)]
     pub struct Project {
-        pub group: Group,
+        pub group: Option<Group>,
     }
 
     #[derive(Deserialize, Debug)]
