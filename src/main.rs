@@ -206,7 +206,10 @@ fn print_timelog(log: &ResponseNode) {
         .map(|e| e.title.as_str())
         .unwrap_or("<no epic>");
     let whitespace = " ".repeat(11);
-    println!("{whitespace}{link}", link = Style::new().dimmed().paint(&log.issue.webUrl));
+    println!(
+        "{whitespace}{link}",
+        link = Style::new().dimmed().paint(&log.issue.webUrl)
+    );
     if let Some(group) = &log.project.group {
         println!(
             "{whitespace}[{epic_key} {epic_name}, {group_key} {group_name}]",
@@ -218,8 +221,10 @@ fn print_timelog(log: &ResponseNode) {
         );
     }
 
-    for line in log.summary.lines() {
-        println!("             {line}");
+    if let Some(lines) = log.summary.as_ref().map(|t| t.lines()) {
+        for line in lines {
+            println!("             {line}");
+        }
     }
 }
 

@@ -20,7 +20,7 @@ pub mod types {
         pub spentAt: String,
         #[serde_as(as = "DurationSeconds<u64>")]
         pub timeSpent: Duration,
-        pub summary: String,
+        pub summary: Option<String>,
         pub issue: Issue,
         pub project: Project,
     }
