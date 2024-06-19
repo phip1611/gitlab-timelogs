@@ -169,7 +169,9 @@ fn parse_gitlab_datetime(datestring: &str) -> NaiveDate {
 }
 
 fn calc_total_time_per_day(date: &NaiveDate, res: &Response) -> Duration {
-    find_logs_of_day(date, res).map(|node| node.timeSpent).sum()
+    find_logs_of_day(date, res)
+        .map(|node| node.timeSpent().1)
+        .sum()
 }
 
 fn find_logs_of_day<'a>(
@@ -183,8 +185,9 @@ fn find_logs_of_day<'a>(
 }
 
 fn print_timelog(log: &ResponseNode) {
+    let (duration_is_positive, duration) = log.timeSpent();
     print!("  ");
-    print_duration(log.timeSpent, Color::Magenta);
+    print_duration(duration, Color::Magenta);
     println!(
         "  {issue_name}",
         issue_name = Style::new()
@@ -193,7 +196,14 @@ fn print_timelog(log: &ResponseNode) {
             .paint(log.issue.title.clone()),
     );
     let min_minutes_threshold = 15;
-    if log.timeSpent.as_secs() / 60 < min_minutes_threshold {
+    if !duration_is_positive {
+        // msg is aligned with the suspicious data output
+        print_warning(
+            "^ ERROR: You have logged this time as NEGATIVE: Update the ticket!",
+            3,
+        );
+    }
+    if duration.as_secs() / 60 < min_minutes_threshold {
         // msg is aligned with the suspicious data output
         print_warning("^ WARN: Less than 15 minutes! Is this correct?", 6);
     }

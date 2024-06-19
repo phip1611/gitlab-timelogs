@@ -2,8 +2,6 @@
 pub mod types {
 
     use serde::Deserialize;
-    use serde_with::serde_as;
-    use serde_with::DurationSeconds;
     use std::time::Duration;
 
     #[derive(Deserialize, Debug)]
@@ -14,15 +12,24 @@ pub mod types {
         pub epic: Option<Epic>,
     }
 
-    #[serde_as]
     #[derive(Deserialize, Debug)]
     pub struct ResponseNode {
         pub spentAt: String,
-        #[serde_as(as = "DurationSeconds<u64>")]
-        pub timeSpent: Duration,
+        /// For some totally weird reason, GitLab allows negative times.
+        /// We recommend just deleting these records. But to support the
+        /// deserialization, we have to do it like that.
+        pub timeSpent: i64,
         pub summary: Option<String>,
         pub issue: Issue,
         pub project: Project,
+    }
+
+    impl ResponseNode {
+        /// Returns a duration in seconds.
+        pub fn timeSpent(&self) -> (bool, Duration) {
+            let dur = Duration::from_secs(self.timeSpent.abs() as u64);
+            (self.timeSpent.is_positive(), dur)
+        }
     }
 
     #[derive(Deserialize, Debug)]
