@@ -55,15 +55,9 @@ fn fetch_result(username: &str, host: &str, token: &str, before: Option<&str>) -
         .unwrap()
 }
 
-/// Fetches all results from the API. If necessary and requested, this also uses
-/// the pagination feature to get really all results. This however takes some
-/// more time.
-fn fetch_all_results(username: &str, host: &str, token: &str, use_pagination: bool) -> Response {
+/// Fetches all results from the API with pagination in mind.
+fn fetch_all_results(username: &str, host: &str, token: &str) -> Response {
     let base = fetch_result(username, host, token, None);
-
-    if !use_pagination {
-        return base;
-    }
 
     let mut aggregated = base;
     while aggregated.data.timelogs.pageInfo.hasPreviousPage {
@@ -87,7 +81,7 @@ fn fetch_all_results(username: &str, host: &str, token: &str, use_pagination: bo
 fn main() {
     let cli = cli::CliArgs::parse();
 
-    let res = fetch_all_results(cli.username(), cli.host(), cli.token(), cli.pagination());
+    let res = fetch_all_results(cli.username(), cli.host(), cli.token());
     let dates = aggregate_and_sort_dates(&res, cli.days());
 
     if dates.is_empty() {

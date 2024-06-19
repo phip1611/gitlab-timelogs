@@ -24,13 +24,6 @@ pub struct CliArgs {
     /// For large requests, please also specify `--pagination`.
     #[arg(long = "days", env, default_value = "1")]
     gitlab_days: NonZeroUsize,
-    /// Whether to use GitLab's pagination feature to load all entries that are
-    /// available. Otherwise, GitLab will cut large requests off, even if `days`
-    /// is set pretty high. The performance overhead is there, but negligible.
-    ///
-    /// You only need this if you want to check very old data.
-    #[arg(long = "pagination", env, default_value = "false")]
-    gitlab_pagination: bool,
 }
 
 impl CliArgs {
@@ -45,8 +38,5 @@ impl CliArgs {
     }
     pub fn days(&self) -> usize {
         self.gitlab_days.into()
-    }
-    pub const fn pagination(&self) -> bool {
-        self.gitlab_pagination
     }
 }
