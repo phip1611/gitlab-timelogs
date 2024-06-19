@@ -1,9 +1,12 @@
 use chrono::{Local, NaiveDate};
-use clap::Parser;
+use clap_serde_derive::{
+    clap::{self},
+    ClapSerde,
+};
 
 /// CLI Arguments for `clap`. If not present, the values are taken from
 /// environment variables.
-#[derive(Parser, Debug)]
+#[derive(ClapSerde, Parser, Debug)]
 #[command(
     version,
     about = "Tool to fetch the timelogs from the GitLab API and display them in a helpful way."
@@ -23,8 +26,8 @@ pub struct CliArgs {
     /// By default, this defaults to today (local time).
     ///
     /// Must be no more than `--after`.
-    #[arg(long = "before", default_value_t = current_date())]
-    gitlab_before: NaiveDate,
+    #[arg(long = "before")]
+    gitlab_before: Option<NaiveDate>,
     /// Filter for oldest inclusive date. For example `2024-06-01`.
     ///
     /// Must be no less than `--before`.
@@ -43,7 +46,9 @@ impl CliArgs {
         &self.gitlab_token
     }
     pub fn before(&self) -> NaiveDate {
-        self.gitlab_before
+        // This is a bit of a hack, because Clap's default_value_t doesn't seem
+        // to work with clap_serde_derive. *sigh*
+        self.gitlab_before.unwrap_or(current_date())
     }
     pub fn after(&self) -> NaiveDate {
         self.gitlab_after
