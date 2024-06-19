@@ -277,7 +277,7 @@ fn print_week(
     data: &Response,
 ) {
     let week_style = Style::new().bold();
-    let week_print = format!("WEEK {}-W{:>2}", week.0, week.1);
+    let week_print = format!("WEEK {}-W{:02}", week.0, week.1);
     println!(
         "{delim} {week_print} {delim}",
         delim = week_style.paint("======================"),
