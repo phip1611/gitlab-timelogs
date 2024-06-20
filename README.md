@@ -34,6 +34,6 @@ Via Nix:
 ## Usage
 
 - `$ gitlab-timelogs --help`
-- `$ gitlab-timelogs --host gitlab.vpn.cyberus-technology.de --username pschuster --token ********** --days 3`
+- `$ gitlab-timelogs --host gitlab.vpn.cyberus-technology.de --username pschuster --token ********** --after 2024-06-01 --before 2024-06-30`
 
 You can provide all parameters also as environment variable.

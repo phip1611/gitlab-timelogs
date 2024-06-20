@@ -1,6 +1,5 @@
 use chrono::{Local, NaiveDate};
 use clap::Parser;
-use std::str::FromStr;
 
 /// CLI Arguments for `clap`. If not present, the values are taken from
 /// environment variables.
@@ -21,15 +20,16 @@ pub struct CliArgs {
     #[arg(long = "token", env)]
     gitlab_token: String,
     /// Filter for newest inclusive date. For example `2024-06-01`.
+    /// By default, this defaults to today (local time).
     ///
     /// Must be no more than `--after`.
-    #[arg(long = "before")]
-    gitlab_before: Option<NaiveDate>,
+    #[arg(long = "before", default_value_t = current_date())]
+    gitlab_before: NaiveDate,
     /// Filter for oldest inclusive date. For example `2024-06-01`.
     ///
     /// Must be no less than `--before`.
-    #[arg(long = "after")]
-    gitlab_after: Option<NaiveDate>,
+    #[arg(long = "after", default_value = "1970-01-01")]
+    gitlab_after: NaiveDate,
 }
 
 impl CliArgs {
@@ -44,10 +44,12 @@ impl CliArgs {
     }
     pub fn before(&self) -> NaiveDate {
         self.gitlab_before
-            .unwrap_or_else(|| Local::now().naive_local().date())
     }
     pub fn after(&self) -> NaiveDate {
         self.gitlab_after
-            .unwrap_or_else(|| NaiveDate::from_str("1970-01-01").unwrap())
     }
+}
+
+fn current_date() -> NaiveDate {
+    Local::now().naive_local().date()
 }
