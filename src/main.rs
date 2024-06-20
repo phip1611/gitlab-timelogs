@@ -24,7 +24,6 @@ use nu_ansi_term::{Color, Style};
 use reqwest::blocking::Client;
 use reqwest::header::AUTHORIZATION;
 use serde_json::json;
-use std::cmp::min;
 use std::collections::{BTreeMap, BTreeSet};
 use std::time::Duration;
 
@@ -80,56 +79,68 @@ fn fetch_all_results(username: &str, host: &str, token: &str) -> Response {
 
 fn main() {
     let cli = cli::CliArgs::parse();
+    assert!(cli.before() >= cli.after());
 
     let res = fetch_all_results(cli.username(), cli.host(), cli.token());
-    let dates = aggregate_and_sort_dates(&res, cli.days());
 
-    if dates.is_empty() {
+    // All dates with timelogs.
+    let all_dates = find_dates(&res, &cli.before(), &cli.after());
+    let week_to_logs_map = aggregate_dates_by_week(&all_dates);
+
+    if week_to_logs_map.is_empty() {
         print_warning(
             "Empty response. Is the username correct? Does the token has read permission?",
             0,
         );
     } else {
-        for (i, (&week, dates_per_week)) in dates.iter().enumerate() {
-            let is_last = i == dates.len() - 1;
+        for (i, (&week, dates_of_week)) in week_to_logs_map.iter().enumerate() {
+            let is_last = i == week_to_logs_map.len() - 1;
 
-            print_week(week, dates_per_week, &res);
+            print_week(week, dates_of_week, &res);
             if !is_last {
                 println!();
             }
         }
     }
+
+    let total_time = sum_total_time_of_dates(all_dates.iter(), &res);
+
+    println!();
+    // same length as the week separator
+    println!("{}", "-".repeat(59));
+    println!();
+    print!(
+        "{total_time_key} ({days_amount:>2} days with records): ",
+        total_time_key = Style::new().bold().paint("Total time"),
+        days_amount = all_dates.len(),
+    );
+    print_duration(total_time, Color::Blue);
+    println!();
 }
 
 /// Returns a sorted list from oldest to newest date with records for the last
-/// `days_n` days.
-fn find_dates(res: &Response, days_n: usize) -> BTreeSet<NaiveDate> {
+/// specified time range.
+fn find_dates(res: &Response, before: &NaiveDate, after: &NaiveDate) -> BTreeSet<NaiveDate> {
     let days = res
         .data
         .timelogs
         .nodes
         .iter()
         .map(|node| parse_gitlab_datetime(&node.spentAt))
+        .filter(|date| date <= before)
+        .filter(|date| date >= after)
         .collect::<BTreeSet<_>>();
 
-    let days_n = min(days.len(), days_n);
-    let skip = days.len() - days_n;
-
-    days.into_iter().skip(skip).collect()
+    days.into_iter().collect()
 }
 
 /// Aggregates and sorts the dates with records from the response from GitLab
 /// so that we get a sorted collection of weeks and a sorted collection of each
 /// day with entries per week.
-///
-/// This only takes the last `days_n` days into account.
-fn aggregate_and_sort_dates(
-    response: &Response,
-    days_n: usize,
+fn aggregate_dates_by_week(
+    dates: &BTreeSet<NaiveDate>,
 ) -> BTreeMap<(i32 /* year */, u32 /* iso week */), BTreeSet<NaiveDate>> {
     let mut week_to_dates_map = BTreeMap::new();
-
-    let dates = find_dates(response, days_n);
 
     for date in dates.iter().copied() {
         let week = date.iso_week().week();
@@ -166,6 +177,15 @@ fn calc_total_time_per_day(date: &NaiveDate, res: &Response) -> Duration {
     find_logs_of_day(date, res)
         .map(|node| node.timeSpent().1)
         .sum()
+}
+
+fn sum_total_time_of_dates<'a>(
+    dates: impl Iterator<Item = &'a NaiveDate>, /* dates of that week */
+    res: &Response,
+) -> Duration {
+    dates
+        .map(|date| calc_total_time_per_day(date, res))
+        .sum::<Duration>()
 }
 
 fn find_logs_of_day<'a>(
@@ -273,7 +293,7 @@ fn print_date(day: &NaiveDate, data: &Response) {
 
 fn print_week(
     week: (i32 /* year */, u32 /* iso week */),
-    dates: &BTreeSet<NaiveDate>,
+    dates_of_week: &BTreeSet<NaiveDate>,
     data: &Response,
 ) {
     let week_style = Style::new().bold();
@@ -283,10 +303,7 @@ fn print_week(
         delim = week_style.paint("======================"),
         week_print = week_style.paint(week_print)
     );
-    let total_week_time = dates
-        .iter()
-        .map(|date| calc_total_time_per_day(date, data))
-        .sum::<Duration>();
+    let total_week_time = sum_total_time_of_dates(dates_of_week.iter(), data);
     print!(
         "{total_time_key}       ",
         total_time_key = Style::new().bold().paint("Total time:")
@@ -295,10 +312,10 @@ fn print_week(
     println!();
     println!();
 
-    for (i, date) in dates.iter().enumerate() {
+    for (i, date) in dates_of_week.iter().enumerate() {
         print_date(date, data);
 
-        let is_last = i == dates.len() - 1;
+        let is_last = i == dates_of_week.len() - 1;
         if !is_last {
             println!();
         }

@@ -1,5 +1,6 @@
+use chrono::{Local, NaiveDate};
 use clap::Parser;
-use std::num::NonZeroUsize;
+use std::str::FromStr;
 
 /// CLI Arguments for `clap`. If not present, the values are taken from
 /// environment variables.
@@ -19,11 +20,16 @@ pub struct CliArgs {
     /// `https://<gitlab_host>-/user_settings/personal_access_tokens`.
     #[arg(long = "token", env)]
     gitlab_token: String,
-    /// How many days (starting with today = 1) to display starting from the
-    /// latest day with a record. This doesn't influence the request size.
-    /// For large requests, please also specify `--pagination`.
-    #[arg(long = "days", env, default_value = "1")]
-    gitlab_days: NonZeroUsize,
+    /// Filter for newest inclusive date. For example `2024-06-01`.
+    ///
+    /// Must be no more than `--after`.
+    #[arg(long = "before")]
+    gitlab_before: Option<NaiveDate>,
+    /// Filter for oldest inclusive date. For example `2024-06-01`.
+    ///
+    /// Must be no less than `--before`.
+    #[arg(long = "after")]
+    gitlab_after: Option<NaiveDate>,
 }
 
 impl CliArgs {
@@ -36,7 +42,12 @@ impl CliArgs {
     pub fn token(&self) -> &str {
         &self.gitlab_token
     }
-    pub fn days(&self) -> usize {
-        self.gitlab_days.into()
+    pub fn before(&self) -> NaiveDate {
+        self.gitlab_before
+            .unwrap_or_else(|| Local::now().naive_local().date())
+    }
+    pub fn after(&self) -> NaiveDate {
+        self.gitlab_after
+            .unwrap_or_else(|| NaiveDate::from_str("1970-01-01").unwrap())
     }
 }

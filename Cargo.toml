@@ -10,7 +10,7 @@ lto = true
 strip = true
 
 [dependencies]
-chrono = "0.4.38"
+chrono = { version = "0.4.38", default-features = false, features = ["clock", "std", "serde"] }
 nu-ansi-term = "0.50.0"
 reqwest = { version =  "0.12.4", features = ["blocking", "json"] }
 serde = { version = "1.0.203", features = ["derive"] }

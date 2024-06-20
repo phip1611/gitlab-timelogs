@@ -26,8 +26,8 @@ pub mod types {
 
     impl ResponseNode {
         /// Returns a duration in seconds.
-        pub fn timeSpent(&self) -> (bool, Duration) {
-            let dur = Duration::from_secs(self.timeSpent.abs() as u64);
+        pub const fn timeSpent(&self) -> (bool, Duration) {
+            let dur = Duration::from_secs(self.timeSpent.unsigned_abs());
             (self.timeSpent.is_positive(), dur)
         }
     }
