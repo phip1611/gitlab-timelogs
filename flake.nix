@@ -20,8 +20,11 @@
     in
     {
       devShells.x86_64-linux = {
-        default = import ./shell.nix { inherit pkgs; };
+        default = pkgs.mkShell {
+          inputsFrom = [ self.packages.x86_64-linux.default ];
+        };
       };
+
       formatter.x86_64-linux = pkgs.nixpkgs-fmt;
       nixosModules.default = (
         { pkgs, ... }:
