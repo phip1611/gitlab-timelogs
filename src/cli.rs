@@ -1,6 +1,6 @@
 use chrono::{Local, NaiveDate};
 use clap_serde_derive::{
-    clap::{self},
+    clap::{self, Parser},
     ClapSerde,
 };
 

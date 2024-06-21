@@ -19,13 +19,17 @@
 
 use crate::gitlab_api::types::{Response, ResponseNode};
 use chrono::{DateTime, Datelike, Local, NaiveDate, Weekday};
-use clap::Parser;
+use clap_serde_derive::ClapSerde;
+use cli::CliArgs;
 use nu_ansi_term::{Color, Style};
 use reqwest::blocking::Client;
 use reqwest::header::AUTHORIZATION;
 use serde_json::json;
 use std::collections::{BTreeMap, BTreeSet};
+use std::error::Error;
+use std::io::ErrorKind;
 use std::time::Duration;
+use xdg::BaseDirectories;
 
 mod cli;
 mod gitlab_api;
@@ -84,8 +88,35 @@ fn fetch_all_results(username: &str, host: &str, token: &str) -> Response {
     aggregated
 }
 
-fn main() {
-    let cli = cli::CliArgs::parse();
+fn read_config_file<T: ClapSerde>() -> Result<T::Opt, Box<dyn Error>> {
+    let config_dir = BaseDirectories::with_prefix("gitlab-timelogs")?;
+    let config_file = config_dir.get_config_file("config.toml");
+
+    let content = match std::fs::read_to_string(&config_file) {
+        Ok(c) => c,
+        Err(e) => {
+            match e.kind() {
+                ErrorKind::NotFound => {}
+                _ => print_warning(
+                    &format!(
+                        "Failed to read config file at {}: {e}",
+                        config_file.display()
+                    ),
+                    0,
+                ),
+            }
+
+            // Treat failure to read a config file as the empty config file.
+            String::new()
+        }
+    };
+
+    Ok(toml::from_str(&content)?)
+}
+
+fn main() -> Result<(), Box<dyn Error>> {
+    let config_content = read_config_file::<CliArgs>()?;
+    let cli = cli::CliArgs::from(config_content).merge_clap();
     assert!(cli.before() >= cli.after());
 
     let res = fetch_all_results(cli.username(), cli.host(), cli.token());
@@ -123,6 +154,8 @@ fn main() {
         print_duration(total_time, Color::Blue);
         println!();
     }
+
+    Ok(())
 }
 
 /// Returns a sorted list from oldest to newest date with records for the last
