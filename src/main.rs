@@ -101,21 +101,21 @@ fn main() {
                 println!();
             }
         }
+
+        let total_time = sum_total_time_of_dates(all_dates.iter(), &res);
+
+        println!();
+        // same length as the week separator
+        println!("{}", "-".repeat(59));
+        println!();
+        print!(
+            "{total_time_key} ({days_amount:>2} days with records): ",
+            total_time_key = Style::new().bold().paint("Total time"),
+            days_amount = all_dates.len(),
+        );
+        print_duration(total_time, Color::Blue);
+        println!();
     }
-
-    let total_time = sum_total_time_of_dates(all_dates.iter(), &res);
-
-    println!();
-    // same length as the week separator
-    println!("{}", "-".repeat(59));
-    println!();
-    print!(
-        "{total_time_key} ({days_amount:>2} days with records): ",
-        total_time_key = Style::new().bold().paint("Total time"),
-        days_amount = all_dates.len(),
-    );
-    print_duration(total_time, Color::Blue);
-    println!();
 }
 
 /// Returns a sorted list from oldest to newest date with records for the last
