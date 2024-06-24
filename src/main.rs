@@ -64,7 +64,14 @@ fn fetch_all_results(username: &str, host: &str, token: &str) -> Response {
             username,
             host,
             token,
-            Some(&aggregated.data.timelogs.pageInfo.startCursor),
+            Some(
+                &aggregated
+                    .data
+                    .timelogs
+                    .pageInfo
+                    .startCursor
+                    .expect("Should be valid string at this point"),
+            ),
         );
 
         // Ordering here is not that important, happens later anyway.

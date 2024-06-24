@@ -35,7 +35,7 @@ pub mod types {
     #[derive(Deserialize, Debug)]
     pub struct ResponsePageInfo {
         pub hasPreviousPage: bool,
-        pub startCursor: String,
+        pub startCursor: Option<String>,
     }
 
     #[derive(Deserialize, Debug)]
