@@ -133,28 +133,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             0,
         );
     } else {
-        for (i, (&week, dates_of_week)) in week_to_logs_map.iter().enumerate() {
-            let is_last = i == week_to_logs_map.len() - 1;
-
-            print_week(week, dates_of_week, &res);
-            if !is_last {
-                println!();
-            }
-        }
-
-        let total_time = sum_total_time_of_dates(all_dates.iter(), &res);
-
-        println!();
-        // same length as the week separator
-        println!("{}", "-".repeat(59));
-        println!();
-        print!(
-            "{total_time_key} ({days_amount:>2} days with records): ",
-            total_time_key = Style::new().bold().paint("Total time"),
-            days_amount = all_dates.len(),
-        );
-        print_duration(total_time, Color::Blue);
-        println!();
+        print_all_weeks(&all_dates, &week_to_logs_map, &res);
     }
 
     Ok(())
@@ -362,6 +341,35 @@ fn print_week(
             println!();
         }
     }
+}
+
+fn print_all_weeks(
+    all_dates: &BTreeSet<NaiveDate>,
+    week_to_logs_map: &BTreeMap<(i32, u32), BTreeSet<NaiveDate>>,
+    res: &Response,
+) {
+    for (i, (&week, dates_of_week)) in week_to_logs_map.iter().enumerate() {
+        let is_last = i == week_to_logs_map.len() - 1;
+
+        print_week(week, dates_of_week, res);
+        if !is_last {
+            println!();
+        }
+    }
+
+    let total_time = sum_total_time_of_dates(all_dates.iter(), res);
+
+    println!();
+    // same length as the week separator
+    println!("{}", "-".repeat(59));
+    println!();
+    print!(
+        "{total_time_key} ({days_amount:>2} days with records): ",
+        total_time_key = Style::new().bold().paint("Total time"),
+        days_amount = all_dates.len(),
+    );
+    print_duration(total_time, Color::Blue);
+    println!();
 }
 
 const fn duration_to_hhmm(dur: Duration) -> (u64, u64) {
