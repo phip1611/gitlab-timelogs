@@ -20,8 +20,11 @@
     in
     {
       devShells.x86_64-linux = {
-        default = import ./shell.nix { inherit pkgs; };
+        default = pkgs.mkShell {
+          inputsFrom = [ self.packages.x86_64-linux.default ];
+        };
       };
+
       formatter.x86_64-linux = pkgs.nixpkgs-fmt;
       nixosModules.default = (
         { pkgs, ... }:
@@ -33,8 +36,7 @@
       );
       packages.x86_64-linux = rec {
         default = gitlab-timelogs;
-        gitlab-timelogs = import ./nix/build.nix {
-          inherit pkgs;
+        gitlab-timelogs = pkgs.callPackage ./nix/build.nix {
           crane = inputs.crane.mkLib pkgs;
         };
       };
