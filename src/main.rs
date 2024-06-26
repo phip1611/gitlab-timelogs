@@ -116,13 +116,15 @@ fn read_config_file<T: ClapSerde>() -> Result<T::Opt, Box<dyn Error>> {
 
 fn main() -> Result<(), Box<dyn Error>> {
     let config_content = read_config_file::<CliArgs>()?;
-    let cli = cli::CliArgs::from(config_content).merge_clap();
-    assert!(cli.before() >= cli.after());
+    let cfg = cli::CliArgs::from(config_content).merge_clap();
+    assert!(cfg.before() >= cfg.after());
+    println!("Host    : {}", cfg.host());
+    println!("Username: {}", cfg.username());
 
-    let res = fetch_all_results(cli.username(), cli.host(), cli.token());
+    let res = fetch_all_results(cfg.username(), cfg.host(), cfg.token());
 
     // All dates with timelogs.
-    let all_dates = find_dates(&res, &cli.before(), &cli.after());
+    let all_dates = find_dates(&res, &cfg.before(), &cfg.after());
     let week_to_logs_map = aggregate_dates_by_week(&all_dates);
 
     if week_to_logs_map.is_empty() {
