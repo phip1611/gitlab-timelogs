@@ -36,4 +36,17 @@ Via Nix:
 - `$ gitlab-timelogs --help`
 - `$ gitlab-timelogs --host gitlab.vpn.cyberus-technology.de --username pschuster --token ********** --after 2024-06-01 --before 2024-06-30`
 
-You can provide all parameters also as environment variable.
+
+### Configuration
+
+1. Via CLI options. Type `--help` for guidance.
+2. Via environment variables:
+   - `GITLAB_HOST`
+   - `GITLAB_USERNAME`
+   - `GITLAB_TOKEN`
+3. Via a `~/.config/gitlab-timelogs/config.toml` file:
+    ```toml
+    gitlab_host = "gitlab.example.com"
+    gitlab_username = "<user>"
+    gitlab_token = "<token>"
+    ```
