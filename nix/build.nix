@@ -1,19 +1,24 @@
-{ pkgs, crane }:
+{ crane
+, nix-gitignore
+, openssl
+, pkg-config
+, rust-bin
+}:
 
 let
   # Toolchain from Rust overlay.
-  rustToolchain = pkgs.rust-bin.stable.latest.default;
+  rustToolchain = rust-bin.stable.latest.default;
   craneLib = crane.overrideToolchain rustToolchain;
 
   commonArgs = {
-    src = pkgs.nix-gitignore.gitignoreSource [ ] ../.;
+    src = nix-gitignore.gitignoreSource [ ] ../.;
     # Not using this, as this removes the ".graphql" file.
     # src = craneLib.cleanCargoSource ./..;
     nativeBuildInputs = [
-      pkgs.pkg-config
+      pkg-config
     ];
     buildInputs = [
-      pkgs.openssl
+      openssl
     ];
     # Fix build. Reference:
     # - https://github.com/sfackler/rust-openssl/issues/1430
@@ -22,9 +27,7 @@ let
   };
 
   # Downloaded and compiled dependencies.
-  cargoArtifacts = craneLib.buildDepsOnly (commonArgs // {
-    pname = "deps";
-  });
+  cargoArtifacts = craneLib.buildDepsOnly commonArgs;
 
   cargoPackage = craneLib.buildPackage (commonArgs // {
     inherit cargoArtifacts;

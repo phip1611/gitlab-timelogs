@@ -36,8 +36,7 @@
       );
       packages.x86_64-linux = rec {
         default = gitlab-timelogs;
-        gitlab-timelogs = import ./nix/build.nix {
-          inherit pkgs;
+        gitlab-timelogs = pkgs.callPackage ./nix/build.nix {
           crane = inputs.crane.mkLib pkgs;
         };
       };
