@@ -10,6 +10,7 @@ at the of the work day or week. `gitlab-timelogs` is not associated with
 the official GitLab project!
 
 ![screenshot.png](screenshot.png)
+(_The screenshot is slightly outdated. The latest version shows more information._)
 
 ## Features
 
