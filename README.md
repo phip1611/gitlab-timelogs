@@ -33,8 +33,8 @@ warnings for typical mistakes.
 
 `gitlab-timelogs` builds and runs at least on the following platforms:
 
-- Linux: x86_64, aarch64
-- MacOS: x86_64, aarch64
+- Linux (all architectures, I guess?)
+- MacOS (all architectures, I guess?)
 
 ## Install
 
