@@ -1,0 +1,39 @@
+name: Build
+
+on:
+  merge_group:
+  pull_request:
+  push:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on: [ macos-latest, ubuntu-latest, windows-latest ]
+        # 1.64: MSVR of the CLI binary
+        rust: [ 1.74.0, stable, nightly ]
+    runs-on: ${{ matrix.runs-on }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ matrix.rust }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: "${{ matrix.runs-on }}-${{ matrix.rust }}"
+      - name: cargo check (debug)
+        run: cargo check --verbose
+      - name: cargo check (release)
+        run: cargo check --verbose --release
+      - name: cargo build (debug)
+        run: cargo build --verbose
+      - name: cargo build (release)
+        run: cargo build --verbose --release
+      - run: cargo test --verbose
+      - name: "CLI: --help"
+        run: cargo run --release -- --help

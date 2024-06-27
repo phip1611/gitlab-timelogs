@@ -5,7 +5,6 @@ CLI utility to support you with your time logs in GitLab.
 """
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.65"
 keywords = ["gitlab", "productivity"]
 categories = ["command-line-utilities"]
 readme = "README.md"
