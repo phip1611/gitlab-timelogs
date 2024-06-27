@@ -1,3 +1,26 @@
+/*
+MIT License
+
+Copyright (c) 2024 Philipp Schuster
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
 use chrono::{Local, NaiveDate};
 use clap::Parser;
 
@@ -9,6 +32,7 @@ pub struct CfgFile {
 }
 
 impl CfgFile {
+    #[allow(clippy::wrong_self_convention)]
     pub fn to_cli_args(self) -> Vec<(String, String)> {
         let mut args = Vec::new();
         if let Some(host) = self.gitlab_host {
@@ -75,9 +99,9 @@ impl CliArgs {
     pub fn before(&self) -> NaiveDate {
         // This is a bit of a hack, because Clap's default_value_t doesn't seem
         // to work with clap_serde_derive. *sigh*
-        self.gitlab_before.unwrap_or(current_date())
+        self.gitlab_before.unwrap_or_else(current_date)
     }
-    pub fn after(&self) -> NaiveDate {
+    pub const fn after(&self) -> NaiveDate {
         self.gitlab_after
     }
 }

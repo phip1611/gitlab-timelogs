@@ -1,11 +1,25 @@
 [package]
 name = "gitlab-timelogs"
+description = """
+CLI utility to support you with your time logs in GitLab.
+"""
 version = "0.1.0"
 edition = "2021"
-publish = false
+rust-version = "1.65"
+keywords = ["gitlab", "productivity"]
+categories = ["command-line-utilities"]
+readme = "README.md"
+license = "MIT"
+homepage = "https://github.com/phip1611/gitlab-timelogs"
+repository = "https://github.com/phip1611/gitlab-timelogs"
+documentation = "https://docs.rs/gitlab-timelogs"
+authors = [
+  "Philipp Schuster <phip1611@gmail.com>"
+]
 
 [profile.release]
 codegen-units = 1
+opt-level = "s"
 lto = true
 strip = true
 
