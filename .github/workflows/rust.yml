@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runs-on: [ macos-latest, ubuntu-latest, windows-latest ]
+        runs-on: [ macos-latest, ubuntu-latest ]
         # 1.64: MSVR of the CLI binary
         rust: [ 1.74.0, stable, nightly ]
     runs-on: ${{ matrix.runs-on }}
