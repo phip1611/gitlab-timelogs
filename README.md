@@ -28,6 +28,13 @@ warnings for typical mistakes.
      but haven't been tested. Note that the free tier may not support time
      logs, but only the enterprise edition.
 
+## Supported Platforms
+
+`gitlab-timelogs` builds and runs at least on the following platforms:
+
+- Linux: x86_64, aarch64
+- MacOS: x86_64, aarch64
+
 ## Install
 
 **Via cargo:**
@@ -60,6 +67,10 @@ warnings for typical mistakes.
     gitlab_username = "<user>"
     gitlab_token = "<token>"
     ```
+
+## MSRV
+
+The MSRV is Rust stable `1.74.0`.
 
 ## Trivia
 
