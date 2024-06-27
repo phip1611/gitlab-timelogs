@@ -40,7 +40,7 @@ warnings for typical mistakes.
 
 **Via cargo:**
 
-- `cargo install --git https://github.com/phip1611/gitlab-timelogs`
+- `cargo install https://github.com/phip1611/gitlab-timelogs`
 
 **Via Nix:**
 
