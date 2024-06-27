@@ -1,12 +1,32 @@
 use chrono::{Local, NaiveDate};
-use clap_serde_derive::{
-    clap::{self, Parser},
-    ClapSerde,
-};
+use clap::Parser;
+
+#[derive(serde::Deserialize)]
+pub struct CfgFile {
+    gitlab_host: Option<String>,
+    gitlab_username: Option<String>,
+    gitlab_token: Option<String>,
+}
+
+impl CfgFile {
+    pub fn to_cli_args(self) -> Vec<(String, String)> {
+        let mut args = Vec::new();
+        if let Some(host) = self.gitlab_host {
+            args.push(("--host".to_string(), host));
+        }
+        if let Some(username) = self.gitlab_username {
+            args.push(("--username".to_string(), username));
+        }
+        if let Some(token) = self.gitlab_token {
+            args.push(("--token".to_string(), token));
+        }
+        args
+    }
+}
 
 /// CLI Arguments for `clap`. If not present, the values are taken from
 /// environment variables.
-#[derive(ClapSerde, Parser, Debug)]
+#[derive(Parser, Debug)]
 #[command(
     version,
     about = "\

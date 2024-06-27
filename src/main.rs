@@ -17,13 +17,15 @@
 #![deny(missing_debug_implementations)]
 #![deny(rustdoc::all)]
 
+use crate::cli::CfgFile;
 use crate::gitlab_api::types::{Response, ResponseNode};
 use chrono::{DateTime, Datelike, Local, NaiveDate, Weekday};
-use clap_serde_derive::ClapSerde;
+use clap::Parser;
 use cli::CliArgs;
 use nu_ansi_term::{Color, Style};
 use reqwest::blocking::Client;
 use reqwest::header::AUTHORIZATION;
+use serde::de::DeserializeOwned;
 use serde_json::json;
 use std::collections::{BTreeMap, BTreeSet};
 use std::error::Error;
@@ -88,7 +90,8 @@ fn fetch_all_results(username: &str, host: &str, token: &str) -> Response {
     aggregated
 }
 
-fn read_config_file<T: ClapSerde>() -> Result<T::Opt, Box<dyn Error>> {
+/// Reads the config file and parses it from TOML.
+fn read_config_file<T: DeserializeOwned>() -> Result<T, Box<dyn Error>> {
     let config_dir = BaseDirectories::with_prefix("gitlab-timelogs")?;
     let config_file = config_dir.get_config_file("config.toml");
 
@@ -114,9 +117,30 @@ fn read_config_file<T: ClapSerde>() -> Result<T::Opt, Box<dyn Error>> {
     Ok(toml::from_str(&content)?)
 }
 
+/// Parses the command line options but first, reads the config file. If certain
+/// command line options are not present, they are taken from the config file.
+///
+/// This is a workaround that clap has no built-in support for a config file
+/// that serves as source for command line options by itself. The focus is
+/// also on the natural error reporting by clap.
+fn get_cli_cfg() -> Result<CliArgs, Box<dyn Error>> {
+    let config_content = read_config_file::<CfgFile>()?;
+    let config_args: Vec<(String, String)> = config_content.to_cli_args();
+    let mut all_args = std::env::args().collect::<Vec<_>>();
+
+    // Push config options as arguments, before parsing them in clap.
+    for (opt_name, opt_value) in config_args {
+        if !all_args.contains(&opt_name) {
+            all_args.push(opt_name);
+            all_args.push(opt_value);
+        }
+    }
+
+    Ok(cli::CliArgs::parse_from(all_args.into_iter()))
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
-    let config_content = read_config_file::<CliArgs>()?;
-    let cfg = cli::CliArgs::from(config_content).merge_clap();
+    let cfg = get_cli_cfg()?;
     assert!(cfg.before() >= cfg.after());
     println!("Host    : {}", cfg.host());
     println!("Username: {}", cfg.username());
