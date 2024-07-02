@@ -60,7 +60,9 @@ a `~/.config/gitlab-timelogs/config.toml` file that looks as follows:
 
 gitlab_host = \"gitlab.example.com\"
 gitlab_username = \"<user>\"
-gitlab_token = \"<token>\""
+gitlab_token = \"<token>\"
+
+gitlab-timelogs IS NOT associated with the official GitLab project!"
 )]
 pub struct CliArgs {
     /// The GitLab host without `https://`. For example `gitlab.example.com`.

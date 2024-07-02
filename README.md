@@ -1,21 +1,22 @@
 # gitlab-timelogs CLI
 
-CLI utility to support you with your time logs in GitLab. The GitLab UI for
+CLI utility to support you with your time logs in GitLab. The GitLab web UI for
 time logs is very rudimentary and the UX is poor (June 2024, GitLab 16.11),
 especially a summary view is missing. This is where `gitlab-timelogs` help you
 by leveraging the GitLab API.
 
 This CLI is made by developers for developers who want to check their timelogs
-at the of the work day or week. `gitlab-timelogs` is not associated with
-the official GitLab project!
+at the of the work day or week. `gitlab-timelogs` **is not** associated with the
+official GitLab project!
 
 ![screenshot.png](screenshot.png)
 (_The screenshot is slightly outdated. The latest version shows more information._)
 
 ## Features
 
-`gitlab-timelogs` provides you with an overview over your time logs and prints
-warnings for typical mistakes.
+`gitlab-timelogs` provides you with an overview of your time logs and prints
+warnings for typical mistakes. It does not allow you to modify entries, but just
+to inspect existing records, so you can fix them in GitLab (if necessary).
 
 - ✅ collect time logs from issues (timelogs associated with MRs currently not
   supported)
