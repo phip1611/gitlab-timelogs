@@ -76,6 +76,11 @@ The MSRV is Rust stable `1.74.0`.
 
 ## Trivia
 
-I created this as part of my work time at [Cyberus Technology GmbH](https://cyberus-technology.de)
+The main motivation to create this was the unbelievable poor UX of the GitLab
+web UI for time logs. For example, the input mask transformed a `1h 30` to
+`3d 7h` instead of `1h 30m`. This common pitfall was unbelievable annoying and
+hard to spot - badly influencing a lot of our time records.
+
+Hence, I created this as part of my work time at [Cyberus Technology GmbH](https://cyberus-technology.de)
 to boost our internal productivity. We love open source! Interested in a
 cool employer? Contact us!
