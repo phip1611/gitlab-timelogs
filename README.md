@@ -72,7 +72,7 @@ of these systems should work as well.
     - `GITLAB_TOKEN`
 3. Via a configuration file either in
    `~/.config/gitlab-timelogs/config.toml` (UNIX) or \
-   `%LOCALAPPDATA%/gitlab-timelogs/config.toml%` (Windows)
+   `%LOCALAPPDATA%/gitlab-timelogs/config.toml` (Windows)
    with the following content: \
     ```toml
     gitlab_host = "gitlab.example.com"

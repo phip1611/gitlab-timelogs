@@ -1,5 +1,9 @@
 # Unreleased (Yet)
 
+# v0.2.2 (2024-07-04)
+
+- fix typos
+
 # v0.2.1 (2024-07-04)
 
 - fix documentation bugs

@@ -58,7 +58,7 @@ Tool to fetch the timelogs from the GitLab API and display them in a helpful
 way. Can either be configured via CLI options, environment variables, or by
 a configuration file. The configuration file must be placed under
 `~/.config/gitlab-timelogs/config.toml` (UNIX) or
-`%LOCALAPPDATA%/gitlab-timelogs/config.toml%` (Windows), and must follow the
+`%LOCALAPPDATA%/gitlab-timelogs/config.toml` (Windows), and must follow the
 following structure:
 
 gitlab_host = \"gitlab.example.com\"
