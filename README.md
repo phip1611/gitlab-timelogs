@@ -37,18 +37,20 @@ to inspect existing records, so you can fix them in GitLab (if necessary).
 - Linux (all architectures, I guess?)
 - MacOS (all architectures, I guess?)
 
-## Install
+## Consume / Install
 
 **Via cargo:**
 
 - `$ cargo install https://github.com/phip1611/gitlab-timelogs`
 
-**Via Nix:**
+**Via Nix / on NixOS:**
 
 - Option A: Add `gitlab-overview.nixosModules.default` (`gitlab-overview` is
   referring to the flake input) to the modules of your NixOS configuration,
   which will add `gitlab-timelogs` to your system-wide packages.
-- Option B: `$ nix shell github:phip1611/gitlab-timelogs`
+- Option B:
+  - B1: `$ nix shell github:phip1611/gitlab-timelogs`
+  - B2: `$ nix run github:phip1611/gitlab-timelogs -- <args>`
 - Option C: add this flake as input and add the package into your system config
 
 ## Usage
