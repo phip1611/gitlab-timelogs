@@ -50,7 +50,7 @@ of these systems should work as well.
 
 **Via Nix / on NixOS:**
 
-- Option A: Add `gitlab-overview.nixosModules.default` (`gitlab-overview` is
+- Option A: Add `gitlab-timelogs.nixosModules.default` (`gitlab-timelogs` is
   referring to the flake input) to the modules of your NixOS configuration,
   which will add `gitlab-timelogs` to your system-wide packages.
 - Option B:

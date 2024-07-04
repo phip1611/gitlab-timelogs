@@ -1,5 +1,9 @@
 # Unreleased (Yet)
 
+# v0.2.1 (2024-07-04)
+
+- fix documentation bugs
+
 # v0.2.0 (2024-07-04)
 
 - tool now also builds and runs on Windows
