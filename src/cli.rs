@@ -71,8 +71,8 @@ pub struct CliArgs {
     /// Your GitLab username.
     #[arg(long = "username", env)]
     gitlab_username: String,
-    /// Token with read access to GitLab API. You can get one on
-    /// `https://<gitlab_host>/-/user_settings/personal_access_tokens`.
+    /// Token with read access (scope `read_api`) to GitLab API. You can get one
+    /// on `https://<gitlab_host>/-/user_settings/personal_access_tokens`.
     #[arg(long = "token", env)]
     gitlab_token: String,
     /// Filter for newest date (inclusive). For example `2024-06-30`.

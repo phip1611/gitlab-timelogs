@@ -1,6 +1,6 @@
 # Unreleased (Yet)
 
-# v0.1.1 (2024-07-02)
+# v0.1.1 (2024-07-04)
 
 - doc & README updates
 
