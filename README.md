@@ -31,11 +31,16 @@ to inspect existing records, so you can fix them in GitLab (if necessary).
      logs, but only the enterprise edition.
 
 ## Supported Platforms
+_(For compilation and running.)_
 
 `gitlab-timelogs` builds and runs at least on the following platforms:
 
 - Linux (all architectures, I guess?)
 - MacOS (all architectures, I guess?)
+- Windows (all architectures, I guess?)
+
+Note that I only tested recent versions of these OSs in Mid-2024. Older versions
+of these systems should work as well.
 
 ## Consume / Install
 
