@@ -1,5 +1,10 @@
 # Unreleased (Yet)
 
+# v0.2.0 (2024-07-04)
+
+- tool now also builds and runs on Windows
+- the nix build for Darwin/macOS was fixed
+
 # v0.1.1 (2024-07-04)
 
 - doc & README updates

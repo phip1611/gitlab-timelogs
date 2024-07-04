@@ -53,8 +53,8 @@ use serde_json::json;
 use std::collections::{BTreeMap, BTreeSet};
 use std::error::Error;
 use std::io::ErrorKind;
+use std::path::PathBuf;
 use std::time::Duration;
-use xdg::BaseDirectories;
 
 mod cli;
 mod gitlab_api;
@@ -113,11 +113,24 @@ fn fetch_all_results(username: &str, host: &str, token: &str) -> Response {
     aggregated
 }
 
-/// Reads the config file and parses it from TOML.
-fn read_config_file<T: DeserializeOwned>() -> Result<T, Box<dyn Error>> {
-    let config_dir = BaseDirectories::with_prefix("gitlab-timelogs")?;
-    let config_file = config_dir.get_config_file("config.toml");
+/// Returns the path of the config file with respect to the current OS.
+fn config_file_path() -> Result<PathBuf, Box<dyn Error>> {
+    #[cfg(target_family = "unix")]
+    let config_os_dir = {
+        let home = std::env::var("HOME")?;
+        PathBuf::from(home).join(".config")
+    };
+    #[cfg(target_family = "windows")]
+    let config_os_dir = std::env::var("LOCALAPPDATA")?;
 
+    let config_dir = PathBuf::from(config_os_dir).join("gitlab-timelogs");
+    Ok(config_dir.join("config.toml"))
+}
+
+/// Reads the config file and parses it from TOML.
+/// On UNIX, it uses `
+fn read_config_file<T: DeserializeOwned>() -> Result<T, Box<dyn Error>> {
+    let config_file = config_file_path()?;
     let content = match std::fs::read_to_string(&config_file) {
         Ok(c) => c,
         Err(e) => {

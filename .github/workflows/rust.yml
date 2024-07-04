@@ -9,11 +9,12 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  build_regular:
+    name: Build (regular)
     strategy:
       fail-fast: false
       matrix:
-        runs-on: [ macos-latest, ubuntu-latest ]
+        runs-on: [ macos-latest, ubuntu-latest, windows-latest ]
         # 1.64: MSVR of the CLI binary
         rust: [ 1.74.0, stable, nightly ]
     runs-on: ${{ matrix.runs-on }}
@@ -37,3 +38,17 @@ jobs:
       - run: cargo test --verbose
       - name: "CLI: --help"
         run: cargo run --release -- --help
+
+  build_nix:
+    name: Build (nix)
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on: [ macos-latest, ubuntu-latest ]
+    runs-on: ${{ matrix.runs-on }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@V27
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - run: nix build .
+      - run: nix run . -- --help
