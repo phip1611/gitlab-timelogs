@@ -5,7 +5,7 @@ CLI utility to support you with your time logs in GitLab.
 
 gitlab-timelogs is not associated with the official GitLab project!
 """
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 keywords = ["gitlab", "productivity"]
 categories = ["command-line-utilities"]
