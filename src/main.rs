@@ -117,7 +117,9 @@ fn fetch_all_results(username: &str, host: &str, token: &str) -> Response {
 fn config_file_path() -> Result<PathBuf, Box<dyn Error>> {
     #[cfg(target_family = "unix")]
     let config_os_dir = {
-        let home = std::env::var("HOME")?;
+        // First look for XDG_CONFIG_HOME, then fall back to HOME
+        // https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+        let home = std::env::var("XDG_CONFIG_HOME").unwrap_or(std::env::var("HOME")?);
         PathBuf::from(home).join(".config")
     };
     #[cfg(target_family = "windows")]

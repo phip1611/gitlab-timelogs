@@ -2,6 +2,7 @@
 
 # v0.2.2 (2024-07-04)
 
+- improve handling of default xdg config dir (unix only)
 - fix typos
 
 # v0.2.1 (2024-07-04)
