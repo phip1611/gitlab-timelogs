@@ -1,8 +1,11 @@
 { crane
+, darwin
+, lib
 , nix-gitignore
 , openssl
 , pkg-config
 , rust-bin
+, stdenv
 }:
 
 let
@@ -19,7 +22,9 @@ let
     ];
     buildInputs = [
       openssl
-    ];
+    ] ++ lib.optionals stdenv.isDarwin (with darwin.apple_sdk.frameworks; [
+      SystemConfiguration
+    ]);
     # Fix build. Reference:
     # - https://github.com/sfackler/rust-openssl/issues/1430
     # - https://docs.rs/openssl/latest/openssl/
