@@ -65,7 +65,10 @@ to inspect existing records, so you can fix them in GitLab (if necessary).
     - `GITLAB_HOST`
     - `GITLAB_USERNAME`
     - `GITLAB_TOKEN`
-3. Via a `~/.config/gitlab-timelogs/config.toml` file:
+3. Via a configuration file either in
+   `~/.config/gitlab-timelogs/config.toml` (UNIX) or \
+   `%LOCALAPPDATA%/gitlab-timelogs/config.toml%` (Windows)
+   with the following content: \
     ```toml
     gitlab_host = "gitlab.example.com"
     gitlab_username = "<user>"
