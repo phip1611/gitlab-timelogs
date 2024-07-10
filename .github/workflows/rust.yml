@@ -31,6 +31,8 @@ jobs:
         run: cargo check --verbose
       - name: cargo check (release)
         run: cargo check --verbose --release
+      - name: cargo clippy
+        run: cargo clippy
       - name: cargo build (debug)
         run: cargo build --verbose
       - name: cargo build (release)
