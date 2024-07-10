@@ -124,7 +124,7 @@ fn config_file_path() -> Result<PathBuf, Box<dyn Error>> {
         PathBuf::from(home).join(".config")
     };
     #[cfg(target_family = "windows")]
-    let config_os_dir = std::env::var("LOCALAPPDATA")?;
+    let config_os_dir = PathBuf::from(std::env::var("LOCALAPPDATA")?);
 
     let config_dir = config_os_dir.join("gitlab-timelogs");
     Ok(config_dir.join("config.toml"))
