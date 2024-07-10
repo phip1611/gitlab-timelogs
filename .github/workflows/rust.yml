@@ -9,6 +9,22 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  style:
+    name: Code style
+    runs-on: ${{ matrix.runs-on }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: cargo fmt
+        run: cargo fmt -- --check
+      - name: cargo clippy
+        run: cargo clippy
+
   build_regular:
     name: Build (regular)
     strategy:
