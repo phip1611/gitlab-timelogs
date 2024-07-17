@@ -407,6 +407,22 @@ fn print_week(
     }
 }
 
+fn print_final_summary(all_dates: &BTreeSet<NaiveDate>, res: &Response) {
+    let total_time = sum_total_time_of_dates(all_dates.iter(), res);
+
+    println!();
+    // same length as the week separator
+    println!("{}", "-".repeat(59));
+    println!();
+    print!(
+        "{total_time_key} ({days_amount:>2} days with records): ",
+        total_time_key = Style::new().bold().paint("Total time"),
+        days_amount = all_dates.len(),
+    );
+    print_duration(total_time, Color::Blue);
+    println!();
+}
+
 fn print_all_weeks(
     all_dates: &BTreeSet<NaiveDate>,
     week_to_logs_map: &BTreeMap<(i32, u32), BTreeSet<NaiveDate>>,
@@ -421,19 +437,7 @@ fn print_all_weeks(
         }
     }
 
-    let total_time = sum_total_time_of_dates(all_dates.iter(), res);
-
-    println!();
-    // same length as the week separator
-    println!("{}", "-".repeat(59));
-    println!();
-    print!(
-        "{total_time_key} ({days_amount:>2} days with records): ",
-        total_time_key = Style::new().bold().paint("Total time"),
-        days_amount = all_dates.len(),
-    );
-    print_duration(total_time, Color::Blue);
-    println!();
+    print_final_summary(all_dates, res);
 }
 
 const fn duration_to_hhmm(dur: Duration) -> (u64, u64) {
