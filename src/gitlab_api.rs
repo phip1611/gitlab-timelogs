@@ -23,11 +23,16 @@ SOFTWARE.
 */
 #[allow(non_snake_case)]
 pub mod types {
-
+    use chrono::{DateTime, Local, NaiveDate};
     use serde::Deserialize;
     use std::time::Duration;
 
-    #[derive(Deserialize, Debug)]
+    #[derive(Clone, Deserialize, Debug)]
+    pub struct Epic {
+        pub title: String,
+    }
+
+    #[derive(Clone, Deserialize, Debug)]
     pub struct Issue {
         pub title: String,
         /// Full http link to issue.
@@ -35,7 +40,17 @@ pub mod types {
         pub epic: Option<Epic>,
     }
 
-    #[derive(Deserialize, Debug)]
+    #[derive(Clone, Deserialize, Debug)]
+    pub struct Group {
+        pub fullName: String,
+    }
+
+    #[derive(Clone, Deserialize, Debug)]
+    pub struct Project {
+        pub group: Option<Group>,
+    }
+
+    #[derive(Clone, Deserialize, Debug)]
     pub struct ResponseNode {
         pub spentAt: String,
         /// For some totally weird reason, GitLab allows negative times.
@@ -53,42 +68,57 @@ pub mod types {
             let dur = Duration::from_secs(self.timeSpent.unsigned_abs());
             (self.timeSpent.is_positive(), dur)
         }
+
+        pub fn group_name(&self) -> Option<&str> {
+            self.project.group.as_ref().map(|g| g.fullName.as_str())
+        }
+
+        pub fn epic_name(&self) -> Option<&str> {
+            self.issue.epic.as_ref().map(|e| e.title.as_str())
+        }
+
+        pub fn has_group(&self, name: &str) -> bool {
+            self.group_name()
+                .map(|group| group == name)
+                .unwrap_or(false)
+        }
+
+        pub fn has_epic(&self, name: &str) -> bool {
+            self.epic_name().map(|epic| epic == name).unwrap_or(false)
+        }
+
+        /// Parses the UTC timestring coming from GitLab in the local timezone of
+        /// the user. This is necessary so that entries accounted to a Monday on
+        /// `00:00` in CEST are not displayed as Sunday. The value is returned
+        /// as [`NaiveDate`] but adjusted to the local time.
+        pub fn datetime(&self) -> NaiveDate {
+            let date = DateTime::parse_from_rfc3339(&self.spentAt).unwrap();
+            let datetime = DateTime::<Local>::from(date);
+            datetime.naive_local().date()
+        }
     }
 
-    #[derive(Deserialize, Debug)]
+    #[derive(Clone, Deserialize, Debug)]
     pub struct ResponsePageInfo {
         pub hasPreviousPage: bool,
         pub startCursor: Option<String>,
     }
 
-    #[derive(Deserialize, Debug)]
+    #[derive(Clone, Deserialize, Debug)]
     pub struct ResponseTimelogs {
         pub nodes: Vec<ResponseNode>,
         pub pageInfo: ResponsePageInfo,
     }
 
-    #[derive(Deserialize, Debug)]
+    #[derive(Clone, Deserialize, Debug)]
     pub struct ResponseData {
         pub timelogs: ResponseTimelogs,
     }
 
-    #[derive(Deserialize, Debug)]
+    /// The response from the GitLab API with all timelogs for the given
+    /// time frame.
+    #[derive(Clone, Deserialize, Debug)]
     pub struct Response {
         pub data: ResponseData,
-    }
-
-    #[derive(Deserialize, Debug)]
-    pub struct Project {
-        pub group: Option<Group>,
-    }
-
-    #[derive(Deserialize, Debug)]
-    pub struct Group {
-        pub fullName: String,
-    }
-
-    #[derive(Deserialize, Debug)]
-    pub struct Epic {
-        pub title: String,
     }
 }
