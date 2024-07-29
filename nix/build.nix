@@ -1,18 +1,13 @@
-{ crane
+{ craneLib
 , darwin
 , lib
 , nix-gitignore
 , openssl
 , pkg-config
-, rust-bin
 , stdenv
 }:
 
 let
-  # Toolchain from Rust overlay.
-  rustToolchain = rust-bin.stable.latest.default;
-  craneLib = crane.overrideToolchain rustToolchain;
-
   commonArgs = {
     src = nix-gitignore.gitignoreSource [ ] ../.;
     # Not using this, as this removes the ".graphql" file.
