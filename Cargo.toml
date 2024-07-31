@@ -18,12 +18,6 @@ authors = [
   "Philipp Schuster <phip1611@gmail.com>"
 ]
 
-[profile.release]
-codegen-units = 1
-opt-level = "s"
-lto = true
-strip = true
-
 [dependencies]
 chrono = { version = "0.4.38", default-features = false, features = ["clock", "std", "serde"] }
 nu-ansi-term = "0.50.0"
