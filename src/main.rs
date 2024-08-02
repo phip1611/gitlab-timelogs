@@ -245,7 +245,7 @@ fn aggregate_dates_by_week(
 }
 
 /// Parses the UTC timestring coming from GitLab in the local timezone of
-/// the user. This is necessary so that entries accoutned to a Monday on `00:00`
+/// the user. This is necessary so that entries accounted to a Monday on `00:00`
 /// in CEST are not displayed as Sunday.
 ///
 /// # Parameters
