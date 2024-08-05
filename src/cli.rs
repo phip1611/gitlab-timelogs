@@ -21,8 +21,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-use chrono::{Local, NaiveDate};
+use chrono::{Datelike, Local, NaiveDate, TimeDelta, Weekday};
 use clap::Parser;
+use std::ops::Sub;
 
 #[derive(serde::Deserialize)]
 pub struct CfgFile {
@@ -88,7 +89,7 @@ pub struct CliArgs {
     /// Filter for oldest date (inclusive). For example `2024-06-01`.
     ///
     /// Must be no more than `--before`.
-    #[arg(long = "after", default_value = "1970-01-01")]
+    #[arg(long = "after", default_value_t = get_default_after_date())]
     gitlab_after: NaiveDate,
 }
 
@@ -114,4 +115,16 @@ impl CliArgs {
 
 fn current_date() -> NaiveDate {
     Local::now().naive_local().date()
+}
+
+/// Returns the previous Monday or today, if today is a Monday.
+/// This makes sense as one typically wants to see what one has done in the
+/// current week.
+fn get_default_after_date() -> NaiveDate {
+    let now = Local::now();
+    let mut day = now;
+    while day.weekday() != Weekday::Mon {
+        day = day.sub(TimeDelta::days(1));
+    }
+    day.naive_local().date()
 }
