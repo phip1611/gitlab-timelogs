@@ -181,8 +181,9 @@ fn get_cli_cfg() -> Result<CliArgs, Box<dyn Error>> {
 fn main() -> Result<(), Box<dyn Error>> {
     let cfg = get_cli_cfg()?;
     assert!(cfg.before() >= cfg.after());
-    println!("Host    : {}", cfg.host());
-    println!("Username: {}", cfg.username());
+    println!("Host     : {}", cfg.host());
+    println!("Username : {}", cfg.username());
+    println!("Time Span: {} - {}", cfg.after(), cfg.before());
 
     let res = fetch_all_results(cfg.username(), cfg.host(), cfg.token());
 
