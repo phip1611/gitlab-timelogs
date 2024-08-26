@@ -1,5 +1,5 @@
 {
-  timelogs(username: "%USERNAME%", last: 500, before: "%BEFORE%") {
+  timelogs(username: "%USERNAME%", last: 500, before: "%BEFORE%", startDate: "%START_DATE%", endDate: "%END_DATE%") {
     nodes {
       spentAt
       timeSpent

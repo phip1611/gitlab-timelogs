@@ -1,5 +1,8 @@
 # Unreleased (Yet)
 
+- time span filtering already happens on the server-side, which accelerates
+  requests by a notable amount.
+
 # v0.2.2 (2024-07-04)
 
 - improve handling of default xdg config dir (unix only)

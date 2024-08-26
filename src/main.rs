@@ -43,7 +43,7 @@ SOFTWARE.
 
 use crate::cli::CfgFile;
 use crate::gitlab_api::types::{Response, ResponseNode};
-use chrono::{DateTime, Datelike, Local, NaiveDate, Weekday};
+use chrono::{DateTime, Datelike, Local, NaiveDate, NaiveTime, Weekday};
 use clap::Parser;
 use cli::CliArgs;
 use nu_ansi_term::{Color, Style};
@@ -62,12 +62,47 @@ mod gitlab_api;
 
 const GRAPHQL_TEMPLATE: &str = include_str!("./gitlab-query.graphql");
 
+/// Transforms a [`NaiveDate`] to a `DateTime<Local>`.
+fn naive_date_to_local_datetime(date: NaiveDate) -> DateTime<Local> {
+    date.and_time(NaiveTime::MIN)
+        .and_local_timezone(Local)
+        .unwrap()
+}
+
 /// Performs a single request against the GitLab API, getting exactly one page
-/// of the paged data source.
-fn fetch_result(username: &str, host: &str, token: &str, before: Option<&str>) -> Response {
+/// of the paged data source. The data is filtered for the date span to make the
+/// request smaller/quicker.
+///
+/// # Parameters
+/// - `username`: The exact GitLab username of the user.
+/// - `host`: Host name of the GitLab instance without `https://`
+/// - `token`: GitLab token to access the GitLab instance. Must have at least
+///            READ access.
+/// - `before`: Identifier from previous request to get the next page of the
+///             paginated result.
+/// - `start_date`: Inclusive begin date.
+/// - `end_date`: Inclusive end date.
+fn fetch_result(
+    username: &str,
+    host: &str,
+    token: &str,
+    before: Option<&str>,
+    start_date: NaiveDate,
+    end_date: NaiveDate,
+) -> Response {
     let graphql_query = GRAPHQL_TEMPLATE
         .replace("%USERNAME%", username)
-        .replace("%BEFORE%", before.unwrap_or_default());
+        .replace("%BEFORE%", before.unwrap_or_default())
+        .replace(
+            "%START_DATE%",
+            naive_date_to_local_datetime(start_date)
+                .to_string()
+                .as_str(),
+        )
+        .replace(
+            "%END_DATE%",
+            naive_date_to_local_datetime(end_date).to_string().as_str(),
+        );
     let payload = json!({ "query": graphql_query });
 
     let authorization = format!("Bearer {token}", token = token);
@@ -85,8 +120,22 @@ fn fetch_result(username: &str, host: &str, token: &str, before: Option<&str>) -
 }
 
 /// Fetches all results from the API with pagination in mind.
-fn fetch_all_results(username: &str, host: &str, token: &str) -> Response {
-    let base = fetch_result(username, host, token, None);
+///
+/// # Parameters
+/// - `username`: The exact GitLab username of the user.
+/// - `host`: Host name of the GitLab instance without `https://`
+/// - `token`: GitLab token to access the GitLab instance. Must have at least
+///            READ access.
+/// - `start_date`: Inclusive begin date.
+/// - `end_date`: Inclusive end date.
+fn fetch_all_results(
+    username: &str,
+    host: &str,
+    token: &str,
+    start_date: NaiveDate,
+    end_date: NaiveDate,
+) -> Response {
+    let base = fetch_result(username, host, token, None, start_date, end_date);
 
     let mut aggregated = base;
     while aggregated.data.timelogs.pageInfo.hasPreviousPage {
@@ -102,6 +151,8 @@ fn fetch_all_results(username: &str, host: &str, token: &str) -> Response {
                     .startCursor
                     .expect("Should be valid string at this point"),
             ),
+            start_date,
+            end_date,
         );
 
         // Ordering here is not that important, happens later anyway.
@@ -185,9 +236,16 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("Username : {}", cfg.username());
     println!("Time Span: {} - {}", cfg.after(), cfg.before());
 
-    let res = fetch_all_results(cfg.username(), cfg.host(), cfg.token());
+    let res = fetch_all_results(
+        cfg.username(),
+        cfg.host(),
+        cfg.token(),
+        cfg.after(),
+        cfg.before(),
+    );
 
     // All dates with timelogs.
+    // TODO this is now obsolete. We need to refactor the "data filter layer"
     let all_dates = find_dates(&res, &cfg.before(), &cfg.after());
     let week_to_logs_map = aggregate_dates_by_week(&all_dates);
 
