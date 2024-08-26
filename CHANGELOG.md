@@ -1,7 +1,10 @@
 # Unreleased (Yet)
 
+# v0.3.0 (2024-08-26)
+
 - time span filtering already happens on the server-side, which accelerates
   requests by a notable amount.
+- updated dependencies
 
 # v0.2.2 (2024-07-04)
 
