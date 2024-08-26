@@ -93,12 +93,16 @@ fn fetch_result(
     let graphql_query = GRAPHQL_TEMPLATE
         .replace("%USERNAME%", username)
         .replace("%BEFORE%", before.unwrap_or_default())
+        // GitLab API ignores the time component and just looks at the
+        // date and the timezone.
         .replace(
             "%START_DATE%",
             naive_date_to_local_datetime(start_date)
                 .to_string()
                 .as_str(),
         )
+        // GitLab API ignores the time component and just looks at the
+        // date and the timezone.
         .replace(
             "%END_DATE%",
             naive_date_to_local_datetime(end_date).to_string().as_str(),
