@@ -58,6 +58,23 @@ of these systems should work as well.
   - B2: `$ nix run github:phip1611/gitlab-timelogs -- <args>`
 - Option C: add this flake as input and add the package into your system config
 
+**Via home-manager:**
+
+1. import the home-manager module: `gitlab-timelogs.nixosModules.home-manager`
+2. enable and configure gitlab-timelogs:
+
+```nix
+gitlab-timelogs = {
+  enable = true;
+  config = {
+    gitlabHost = "gitlab.example.com";
+    gitlabUsername = "exampleuser";
+    # Either write as a string here, or read from a file that you do not push:
+    gitlabToken = with builtins; readFile (toPath ./gitlab-token.txt);
+  };
+};
+```
+
 ## Usage
 
 - `$ gitlab-timelogs --help`
