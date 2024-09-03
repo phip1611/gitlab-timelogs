@@ -41,92 +41,24 @@ SOFTWARE.
 #![deny(missing_debug_implementations)]
 #![deny(rustdoc::all)]
 
-use crate::cli::CfgFile;
+use crate::cfg::get_cfg;
 use crate::fetch::fetch_results;
 use crate::filtering::filter_timelogs;
 use crate::gitlab_api::types::ResponseNode;
 use chrono::{Datelike, NaiveDate, Weekday};
-use clap::Parser;
-use cli::CliArgs;
 use nu_ansi_term::{Color, Style};
-use serde::de::DeserializeOwned;
 use std::error::Error;
-use std::io::ErrorKind;
-use std::path::PathBuf;
 use std::time::Duration;
 
+mod cfg;
 mod cli;
 mod fetch;
 mod filtering;
 mod gitlab_api;
 mod views;
 
-/// Returns the path of the config file with respect to the current OS.
-fn config_file_path() -> Result<PathBuf, Box<dyn Error>> {
-    #[cfg(target_family = "unix")]
-    let config_os_dir = {
-        // First look for XDG_CONFIG_HOME, then fall back to HOME
-        // https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
-        let home = std::env::var("XDG_CONFIG_HOME").unwrap_or(std::env::var("HOME")?);
-        PathBuf::from(home).join(".config")
-    };
-    #[cfg(target_family = "windows")]
-    let config_os_dir = PathBuf::from(std::env::var("LOCALAPPDATA")?);
-
-    let config_dir = config_os_dir.join("gitlab-timelogs");
-    Ok(config_dir.join("config.toml"))
-}
-
-/// Reads the config file and parses it from TOML.
-/// On UNIX, it uses `
-fn read_config_file<T: DeserializeOwned>() -> Result<T, Box<dyn Error>> {
-    let config_file = config_file_path()?;
-    let content = match std::fs::read_to_string(&config_file) {
-        Ok(c) => c,
-        Err(e) => {
-            match e.kind() {
-                ErrorKind::NotFound => {}
-                _ => print_warning(
-                    &format!(
-                        "Failed to read config file at {}: {e}",
-                        config_file.display()
-                    ),
-                    0,
-                ),
-            }
-
-            // Treat failure to read a config file as the empty config file.
-            String::new()
-        }
-    };
-
-    Ok(toml::from_str(&content)?)
-}
-
-/// Parses the command line options but first, reads the config file. If certain
-/// command line options are not present, they are taken from the config file.
-///
-/// This is a workaround that clap has no built-in support for a config file
-/// that serves as source for command line options by itself. The focus is
-/// also on the natural error reporting by clap.
-fn get_cli_cfg() -> Result<CliArgs, Box<dyn Error>> {
-    let config_content = read_config_file::<CfgFile>()?;
-    let config_args: Vec<(String, String)> = config_content.to_cli_args();
-    let mut all_args = std::env::args().collect::<Vec<_>>();
-
-    // Push config options as arguments, before parsing them in clap.
-    for (opt_name, opt_value) in config_args {
-        if !all_args.contains(&opt_name) {
-            all_args.push(opt_name);
-            all_args.push(opt_value);
-        }
-    }
-
-    Ok(cli::CliArgs::parse_from(all_args))
-}
-
 fn main() -> Result<(), Box<dyn Error>> {
-    let cfg = get_cli_cfg()?;
+    let cfg = get_cfg()?;
     assert!(cfg.before() >= cfg.after());
     println!("Host     : {}", cfg.host());
     println!("Username : {}", cfg.username());
