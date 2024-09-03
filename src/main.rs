@@ -43,7 +43,6 @@ SOFTWARE.
 
 use crate::cfg::get_cfg;
 use crate::fetch::fetch_results;
-use crate::filtering::filter_timelogs;
 use crate::gitlab_api::types::ResponseNode;
 use chrono::{Datelike, NaiveDate, Weekday};
 use nu_ansi_term::{Color, Style};
@@ -53,7 +52,6 @@ use std::time::Duration;
 mod cfg;
 mod cli;
 mod fetch;
-mod filtering;
 mod gitlab_api;
 mod views;
 
@@ -64,7 +62,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("Username : {}", cfg.username());
     println!("Time Span: {} - {}", cfg.after(), cfg.before());
 
-    let data_all = fetch_results(
+    let response = fetch_results(
         cfg.username(),
         cfg.host(),
         cfg.token(),
@@ -72,20 +70,18 @@ fn main() -> Result<(), Box<dyn Error>> {
         cfg.before(),
     );
 
-    // All dates with timelogs.
-    let data_filtered = filter_timelogs(
-        &data_all, None, /* time already filtered on server */
-        None, None,
-    )
-    .collect::<Vec<_>>();
+    // All nodes but as vector to references.
+    // Simplifies the handling with other parts of the code, especially the
+    // `views` module.
+    let nodes = response.data.timelogs.nodes.iter().collect::<Vec<_>>();
 
-    if data_filtered.is_empty() {
+    if nodes.is_empty() {
         print_warning(
             "Empty response. Is the username correct? Does the token has read permission?",
             0,
         );
     } else {
-        print_all_weeks(data_filtered.as_slice());
+        print_all_weeks(nodes.as_slice());
     }
 
     Ok(())
