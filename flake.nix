@@ -3,7 +3,6 @@
 
   inputs = {
     crane.url = "github:ipetkov/crane/master";
-    crane.inputs.nixpkgs.follows = "nixpkgs";
     flake-parts.url = "github:hercules-ci/flake-parts";
     flake-parts.inputs.nixpkgs-lib.follows = "nixpkgs";
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
@@ -76,6 +75,10 @@
             devShells = {
               default = pkgs.mkShell {
                 inputsFrom = [ self'.packages.default ];
+                nativeBuildInputs = [ pkgs.pkg-config ];
+                buildInputs = [
+                  pkgs.openssl
+                ];
               };
             };
             formatter = pkgs.nixpkgs-fmt;
