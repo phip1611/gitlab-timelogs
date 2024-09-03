@@ -21,6 +21,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+
+//! Typings for the GitLab API. These types are specific to the graphql query
+//! used by this tool.
+
 #[allow(non_snake_case)]
 pub mod types {
     use chrono::{DateTime, Local, NaiveDate};
