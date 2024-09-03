@@ -42,134 +42,24 @@ SOFTWARE.
 #![deny(rustdoc::all)]
 
 use crate::cli::CfgFile;
+use crate::fetch::fetch_results;
 use crate::filtering::filter_timelogs;
-use crate::gitlab_api::types::{Response, ResponseNode};
-use chrono::{DateTime, Datelike, Local, NaiveDate, NaiveTime, Weekday};
+use crate::gitlab_api::types::ResponseNode;
+use chrono::{Datelike, NaiveDate, Weekday};
 use clap::Parser;
 use cli::CliArgs;
 use nu_ansi_term::{Color, Style};
-use reqwest::blocking::Client;
-use reqwest::header::AUTHORIZATION;
 use serde::de::DeserializeOwned;
-use serde_json::json;
 use std::error::Error;
 use std::io::ErrorKind;
 use std::path::PathBuf;
 use std::time::Duration;
 
 mod cli;
+mod fetch;
 mod filtering;
 mod gitlab_api;
 mod views;
-
-const GRAPHQL_TEMPLATE: &str = include_str!("./gitlab-query.graphql");
-
-/// Transforms a [`NaiveDate`] to a `DateTime<Local>`.
-fn naive_date_to_local_datetime(date: NaiveDate) -> DateTime<Local> {
-    date.and_time(NaiveTime::MIN)
-        .and_local_timezone(Local)
-        .unwrap()
-}
-
-/// Performs a single request against the GitLab API, getting exactly one page
-/// of the paged data source. The data is filtered for the date span to make the
-/// request smaller/quicker.
-///
-/// # Parameters
-/// - `username`: The exact GitLab username of the user.
-/// - `host`: Host name of the GitLab instance without `https://`
-/// - `token`: GitLab token to access the GitLab instance. Must have at least
-///            READ access.
-/// - `before`: Identifier from previous request to get the next page of the
-///             paginated result.
-/// - `start_date`: Inclusive begin date.
-/// - `end_date`: Inclusive end date.
-fn fetch_result(
-    username: &str,
-    host: &str,
-    token: &str,
-    before: Option<&str>,
-    start_date: NaiveDate,
-    end_date: NaiveDate,
-) -> Response {
-    let graphql_query = GRAPHQL_TEMPLATE
-        .replace("%USERNAME%", username)
-        .replace("%BEFORE%", before.unwrap_or_default())
-        // GitLab API ignores the time component and just looks at the
-        // date and the timezone.
-        .replace(
-            "%START_DATE%",
-            naive_date_to_local_datetime(start_date)
-                .to_string()
-                .as_str(),
-        )
-        // GitLab API ignores the time component and just looks at the
-        // date and the timezone.
-        .replace(
-            "%END_DATE%",
-            naive_date_to_local_datetime(end_date).to_string().as_str(),
-        );
-    let payload = json!({ "query": graphql_query });
-
-    let authorization = format!("Bearer {token}", token = token);
-    let url = format!("https://{host}/api/graphql", host = host);
-    let client = Client::new();
-
-    client
-        .post(url)
-        .header(AUTHORIZATION, authorization)
-        .json(&payload)
-        .send()
-        .unwrap()
-        .json::<Response>()
-        .unwrap()
-}
-
-/// Fetches all results from the API with pagination in mind.
-///
-/// # Parameters
-/// - `username`: The exact GitLab username of the user.
-/// - `host`: Host name of the GitLab instance without `https://`
-/// - `token`: GitLab token to access the GitLab instance. Must have at least
-///            READ access.
-/// - `start_date`: Inclusive begin date.
-/// - `end_date`: Inclusive end date.
-fn fetch_all_results(
-    username: &str,
-    host: &str,
-    token: &str,
-    start_date: NaiveDate,
-    end_date: NaiveDate,
-) -> Response {
-    let base = fetch_result(username, host, token, None, start_date, end_date);
-
-    let mut aggregated = base;
-    while aggregated.data.timelogs.pageInfo.hasPreviousPage {
-        let mut next = fetch_result(
-            username,
-            host,
-            token,
-            Some(
-                &aggregated
-                    .data
-                    .timelogs
-                    .pageInfo
-                    .startCursor
-                    .expect("Should be valid string at this point"),
-            ),
-            start_date,
-            end_date,
-        );
-
-        // Ordering here is not that important, happens later anyway.
-        next.data
-            .timelogs
-            .nodes
-            .extend(aggregated.data.timelogs.nodes);
-        aggregated = next;
-    }
-    aggregated
-}
 
 /// Returns the path of the config file with respect to the current OS.
 fn config_file_path() -> Result<PathBuf, Box<dyn Error>> {
@@ -242,7 +132,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("Username : {}", cfg.username());
     println!("Time Span: {} - {}", cfg.after(), cfg.before());
 
-    let data_all = fetch_all_results(
+    let data_all = fetch_results(
         cfg.username(),
         cfg.host(),
         cfg.token(),
