@@ -1,6 +1,6 @@
 # gitlab-timelogs CLI
 
-CLI utility to support you with your time logs in GitLab. The GitLab web UI for
+CLI utility to assist you with your time logs in GitLab. The GitLab web UI for
 time logs is very rudimentary and the UX is poor (June 2024, GitLab 16.11),
 especially a summary view is missing. This is where `gitlab-timelogs` help you
 by leveraging the GitLab API.

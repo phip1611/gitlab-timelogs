@@ -1,5 +1,7 @@
 # Unreleased (Yet)
 
+# v0.4.0 (2024-09-03)
+
 - Added `-x/--extended-summary` flag to show an extended summary at the end
   of the output, where the summarized time per epic and per issue is listed.
 - internal code improvements
