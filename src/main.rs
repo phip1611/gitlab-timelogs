@@ -42,6 +42,7 @@ SOFTWARE.
 #![deny(rustdoc::all)]
 
 use crate::cfg::get_cfg;
+use crate::cli::CliArgs;
 use crate::fetch::fetch_results;
 use crate::gitlab_api::types::ResponseNode;
 use chrono::{Datelike, NaiveDate, Weekday};
@@ -81,7 +82,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             0,
         );
     } else {
-        print_all_weeks(nodes.as_slice());
+        print_all_weeks(nodes.as_slice(), &cfg);
     }
 
     Ok(())
@@ -204,7 +205,26 @@ fn print_week(week: (i32 /* year */, u32 /* iso week */), nodes_of_week: &[&Resp
     }
 }
 
-fn print_final_summary(nodes: &[&ResponseNode]) {
+fn print_extended_summary(nodes: &[&ResponseNode]) {
+    let nodes_by_epic = views::to_nodes_by_epic(nodes);
+    for (epic, nodes_of_epic) in nodes_by_epic {
+        let duration = views::to_time_spent_sum(&nodes_of_epic);
+        print!("  ");
+        print_duration(duration, Color::Magenta);
+        print!(
+            " - {epic_key} {epic_name}",
+            epic_key = Style::new().dimmed().paint("Epic:"),
+            epic_name = Style::new().bold().paint(
+                epic.as_ref()
+                    .map(|e| e.title.as_str())
+                    .unwrap_or("<No Epic>")
+            )
+        );
+        println!();
+    }
+}
+
+fn print_final_summary(nodes: &[&ResponseNode], cfg: &CliArgs) {
     // Print separator.
     {
         println!();
@@ -224,10 +244,13 @@ fn print_final_summary(nodes: &[&ResponseNode]) {
     print_duration(total_time, Color::Blue);
     println!();
 
-    // TODO print by epic, by issue, and by group
+    if cfg.print_extended_summary() {
+        println!();
+        print_extended_summary(nodes);
+    }
 }
 
-fn print_all_weeks(nodes: &[&ResponseNode]) {
+fn print_all_weeks(nodes: &[&ResponseNode], cfg: &CliArgs) {
     let view = views::to_nodes_by_week(nodes);
     for (i, (week, nodes_of_week)) in view.iter().enumerate() {
         print_week((week.year(), week.week()), nodes_of_week);
@@ -238,7 +261,7 @@ fn print_all_weeks(nodes: &[&ResponseNode]) {
         }
     }
 
-    print_final_summary(nodes);
+    print_final_summary(nodes, cfg);
 }
 
 const fn duration_to_hhmm(dur: Duration) -> (u64, u64) {

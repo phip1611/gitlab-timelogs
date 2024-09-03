@@ -91,6 +91,10 @@ pub struct CliArgs {
     /// Must be no more than `--before`.
     #[arg(long = "after", default_value_t = get_default_after_date())]
     gitlab_after: NaiveDate,
+    /// Show an extended summary at the end with the time per issue and per
+    /// epic.
+    #[arg(short = 'x', long = "extended-summary")]
+    print_extended_summary: bool,
 }
 
 impl CliArgs {
@@ -110,6 +114,10 @@ impl CliArgs {
     }
     pub const fn after(&self) -> NaiveDate {
         self.gitlab_after
+    }
+
+    pub const fn print_extended_summary(&self) -> bool {
+        self.print_extended_summary
     }
 }
 

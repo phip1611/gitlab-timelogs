@@ -31,12 +31,12 @@ pub mod types {
     use serde::Deserialize;
     use std::time::Duration;
 
-    #[derive(Clone, Deserialize, Debug)]
+    #[derive(Clone, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
     pub struct Epic {
         pub title: String,
     }
 
-    #[derive(Clone, Deserialize, Debug)]
+    #[derive(Clone, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
     pub struct Issue {
         pub title: String,
         /// Full http link to issue.
@@ -44,17 +44,17 @@ pub mod types {
         pub epic: Option<Epic>,
     }
 
-    #[derive(Clone, Deserialize, Debug)]
+    #[derive(Clone, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
     pub struct Group {
         pub fullName: String,
     }
 
-    #[derive(Clone, Deserialize, Debug)]
+    #[derive(Clone, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
     pub struct Project {
         pub group: Option<Group>,
     }
 
-    #[derive(Clone, Deserialize, Debug)]
+    #[derive(Clone, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
     pub struct ResponseNode {
         pub spentAt: String,
         /// For some totally weird reason, GitLab allows negative times.
@@ -73,22 +73,8 @@ pub mod types {
             (self.timeSpent.is_positive(), dur)
         }
 
-        pub fn group_name(&self) -> Option<&str> {
-            self.project.group.as_ref().map(|g| g.fullName.as_str())
-        }
-
         pub fn epic_name(&self) -> Option<&str> {
             self.issue.epic.as_ref().map(|e| e.title.as_str())
-        }
-
-        pub fn has_group(&self, name: &str) -> bool {
-            self.group_name()
-                .map(|group| group == name)
-                .unwrap_or(false)
-        }
-
-        pub fn has_epic(&self, name: &str) -> bool {
-            self.epic_name().map(|epic| epic == name).unwrap_or(false)
         }
 
         /// Parses the UTC timestring coming from GitLab in the local timezone of
@@ -102,26 +88,26 @@ pub mod types {
         }
     }
 
-    #[derive(Clone, Deserialize, Debug)]
+    #[derive(Clone, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
     pub struct ResponsePageInfo {
         pub hasPreviousPage: bool,
         pub startCursor: Option<String>,
     }
 
-    #[derive(Clone, Deserialize, Debug)]
+    #[derive(Clone, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
     pub struct ResponseTimelogs {
         pub nodes: Vec<ResponseNode>,
         pub pageInfo: ResponsePageInfo,
     }
 
-    #[derive(Clone, Deserialize, Debug)]
+    #[derive(Clone, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
     pub struct ResponseData {
         pub timelogs: ResponseTimelogs,
     }
 
     /// The response from the GitLab API with all timelogs for the given
     /// time frame.
-    #[derive(Clone, Deserialize, Debug)]
+    #[derive(Clone, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
     pub struct Response {
         pub data: ResponseData,
     }
