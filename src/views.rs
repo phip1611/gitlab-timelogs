@@ -29,89 +29,49 @@ use chrono::{Datelike, IsoWeek, NaiveDate};
 use std::collections::BTreeMap;
 use std::time::Duration;
 
+fn group_notes_by_filter<'a, T: PartialEq + Ord>(
+    nodes: &[&'a ResponseNode],
+    map_fn: impl Fn(&ResponseNode) -> T,
+) -> BTreeMap<T, Vec<&'a ResponseNode>> {
+    let items = nodes.iter().map(|node| map_fn(node)).collect::<Vec<_>>();
+
+    let mut map = BTreeMap::new();
+    for item in items {
+        let nodes_of_week = nodes
+            .iter()
+            .filter(|node| map_fn(node) == item)
+            .cloned()
+            .collect::<Vec<_>>();
+
+        map.entry(item).or_insert(nodes_of_week);
+    }
+    map
+}
+
 /// Returns the nodes per [`IsoWeek`].
 pub fn to_nodes_by_week<'a>(
     nodes: &[&'a ResponseNode],
 ) -> BTreeMap<IsoWeek, Vec<&'a ResponseNode>> {
-    let weeks = nodes
-        .iter()
-        .map(|node| node.datetime().iso_week())
-        .collect::<Vec<_>>();
-
-    let mut map = BTreeMap::new();
-    for week in weeks {
-        let nodes_of_week = nodes
-            .iter()
-            .filter(|node| node.datetime().iso_week() == week)
-            .cloned()
-            .collect::<Vec<_>>();
-
-        map.entry(week).or_insert(nodes_of_week);
-    }
-    map
+    group_notes_by_filter(nodes, |node| node.datetime().iso_week())
 }
 
 /// Returns the nodes per [`NaiveDate`].
 pub fn to_nodes_by_day<'a>(
     nodes: &[&'a ResponseNode],
 ) -> BTreeMap<NaiveDate, Vec<&'a ResponseNode>> {
-    let days = nodes.iter().map(|node| node.datetime()).collect::<Vec<_>>();
-
-    let mut map = BTreeMap::new();
-    for day in days {
-        let nodes_of_week = nodes
-            .iter()
-            .filter(|node| node.datetime() == day)
-            .cloned()
-            .collect::<Vec<_>>();
-
-        map.entry(day).or_insert(nodes_of_week);
-    }
-    map
+    group_notes_by_filter(nodes, |node| node.datetime())
 }
 
 /// Returns the nodes per [`Epic`].
 pub fn to_nodes_by_epic<'a>(
     nodes: &[&'a ResponseNode],
 ) -> BTreeMap<Option<Epic>, Vec<&'a ResponseNode>> {
-    let epics = nodes
-        .iter()
-        .map(|node| node.issue.epic.clone())
-        .collect::<Vec<_>>();
-
-    let mut map = BTreeMap::new();
-    for epic in epics {
-        let nodes_of_epic = nodes
-            .iter()
-            .filter(|node| node.issue.epic == epic)
-            .cloned()
-            .collect::<Vec<_>>();
-
-        map.entry(epic).or_insert(nodes_of_epic);
-    }
-    map
+    group_notes_by_filter(nodes, |node| node.issue.epic.clone())
 }
 
 /// Returns the nodes per [`Issue`].
-pub fn to_nodes_by_issue<'a>(
-    nodes: &[&'a ResponseNode],
-) -> BTreeMap<Issue, Vec<&'a ResponseNode>> {
-    let issues = nodes
-        .iter()
-        .map(|node| node.issue.clone())
-        .collect::<Vec<_>>();
-
-    let mut map = BTreeMap::new();
-    for issue in issues {
-        let nodes_of_issue = nodes
-            .iter()
-            .filter(|node| node.issue == issue)
-            .cloned()
-            .collect::<Vec<_>>();
-
-        map.entry(issue).or_insert(nodes_of_issue);
-    }
-    map
+pub fn to_nodes_by_issue<'a>(nodes: &[&'a ResponseNode]) -> BTreeMap<Issue, Vec<&'a ResponseNode>> {
+    group_notes_by_filter(nodes, |node| node.issue.clone())
 }
 
 /// Returns the time spent per day.
