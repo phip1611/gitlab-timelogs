@@ -24,7 +24,7 @@ SOFTWARE.
 
 //! Provides transform functions for different views into the data.
 
-use crate::gitlab_api::types::{Epic, ResponseNode};
+use crate::gitlab_api::types::{Epic, Issue, ResponseNode};
 use chrono::{Datelike, IsoWeek, NaiveDate};
 use std::collections::BTreeMap;
 use std::time::Duration;
@@ -88,6 +88,28 @@ pub fn to_nodes_by_epic<'a>(
             .collect::<Vec<_>>();
 
         map.entry(epic).or_insert(nodes_of_epic);
+    }
+    map
+}
+
+/// Returns the nodes per [`Issue`].
+pub fn to_nodes_by_issue<'a>(
+    nodes: &[&'a ResponseNode],
+) -> BTreeMap<Issue, Vec<&'a ResponseNode>> {
+    let issues = nodes
+        .iter()
+        .map(|node| node.issue.clone())
+        .collect::<Vec<_>>();
+
+    let mut map = BTreeMap::new();
+    for issue in issues {
+        let nodes_of_issue = nodes
+            .iter()
+            .filter(|node| node.issue == issue)
+            .cloned()
+            .collect::<Vec<_>>();
+
+        map.entry(issue).or_insert(nodes_of_issue);
     }
     map
 }

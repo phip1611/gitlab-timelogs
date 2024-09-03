@@ -206,21 +206,36 @@ fn print_week(week: (i32 /* year */, u32 /* iso week */), nodes_of_week: &[&Resp
 }
 
 fn print_extended_summary(nodes: &[&ResponseNode]) {
-    let nodes_by_epic = views::to_nodes_by_epic(nodes);
-    for (epic, nodes_of_epic) in nodes_by_epic {
-        let duration = views::to_time_spent_sum(&nodes_of_epic);
-        print!("  ");
-        print_duration(duration, Color::Magenta);
-        print!(
-            " - {epic_key} {epic_name}",
-            epic_key = Style::new().dimmed().paint("Epic:"),
-            epic_name = Style::new().bold().paint(
-                epic.as_ref()
-                    .map(|e| e.title.as_str())
-                    .unwrap_or("<No Epic>")
-            )
-        );
-        println!();
+    {
+        let nodes_by_epic = views::to_nodes_by_epic(nodes);
+        for (epic, nodes_of_epic) in nodes_by_epic {
+            let duration = views::to_time_spent_sum(&nodes_of_epic);
+            print!("  ");
+            print_duration(duration, Color::Magenta);
+            print!(
+                " - {epic_key}  {epic_name}",
+                epic_key = Style::new().dimmed().paint("Epic:"),
+                epic_name = Style::new().bold().paint(
+                    epic.as_ref()
+                        .map(|e| e.title.as_str())
+                        .unwrap_or("<No Epic>")
+                )
+            );
+            println!();
+        }
+    }
+    {
+        let nodes_by_issue = views::to_nodes_by_issue(nodes);
+        for (issue, nodes_of_issue) in nodes_by_issue {
+            let duration = views::to_time_spent_sum(&nodes_of_issue);
+            print!("  ");
+            print_duration(duration, Color::Magenta);
+            print!(
+                " - Issue: {issue_name}",
+                issue_name = Style::new().bold().fg(Color::Green).paint(issue.title)
+            );
+            println!();
+        }
     }
 }
 
