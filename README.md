@@ -50,13 +50,15 @@ of these systems should work as well.
 
 **Via Nix / on NixOS:**
 
-- Option A: Add `gitlab-timelogs.nixosModules.default` (`gitlab-timelogs` is
-  referring to the flake input) to the modules of your NixOS configuration,
-  which will add `gitlab-timelogs` to your system-wide packages.
-- Option B:
-  - B1: `$ nix shell github:phip1611/gitlab-timelogs`
-  - B2: `$ nix run github:phip1611/gitlab-timelogs -- <args>`
-- Option C: add this flake as input and add the package into your system config
+- Option A: [via `nixpkgs`](https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=gitlab-timelogs)
+  - A1: Add `pkgs.gitlab-timelogs` to your packages
+  - A2: Use `nix-shell -p gitlab-timelogs`
+- Option B: consume this Flake/Repository
+  - B1: Add `gitlab-timelogs.nixosModules.default` (`gitlab-timelogs` is
+    referring to the flake input) to the modules of your NixOS configuration,
+    which will add `gitlab-timelogs` to your system-wide packages.
+  - B2: Open a shell: `$ nix shell github:phip1611/gitlab-timelogs`
+  - B3: Run the tool: `$ nix run github:phip1611/gitlab-timelogs -- <args>`
 
 **Via home-manager:**
 
