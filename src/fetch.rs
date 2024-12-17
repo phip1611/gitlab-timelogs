@@ -27,6 +27,7 @@ SOFTWARE.
 //! [`fetch_results`] is the entry point.
 
 use crate::gitlab_api::types::Response;
+use anyhow::Context;
 use chrono::{DateTime, Local, NaiveDate, NaiveTime};
 use reqwest::blocking::Client;
 use reqwest::header::AUTHORIZATION;
@@ -61,7 +62,7 @@ fn fetch_result(
     before: Option<&str>,
     start_date: NaiveDate,
     end_date: NaiveDate,
-) -> Response {
+) -> anyhow::Result<Response> {
     let graphql_query = GRAPHQL_TEMPLATE
         .replace("%USERNAME%", username)
         .replace("%BEFORE%", before.unwrap_or_default())
@@ -85,19 +86,18 @@ fn fetch_result(
     let url = format!("https://{host}/api/graphql", host = host);
     let client = Client::new();
 
-    match client
+    let plain_response = client
         .post(url)
         .header(AUTHORIZATION, authorization)
         .json(&payload)
         .send()
-        .unwrap()
+        .context("Failed to send request")?
         .error_for_status()
-    {
-        Ok(response) => response.json::<Response>().unwrap(),
-        Err(err) => {
-            panic!("Request to Gitlab failed: {err}")
-        }
-    }
+        .context("Failed to receive proper response")?;
+
+    plain_response
+        .json::<Response>()
+        .context("Failed to parse response body as JSON")
 }
 
 /// Fetches all results from the API with pagination in mind.
@@ -115,8 +115,8 @@ pub fn fetch_results(
     token: &str,
     start_date: NaiveDate,
     end_date: NaiveDate,
-) -> Response {
-    let base = fetch_result(username, host, token, None, start_date, end_date);
+) -> anyhow::Result<Response> {
+    let base = fetch_result(username, host, token, None, start_date, end_date)?;
 
     let mut aggregated = base;
     while aggregated.data.timelogs.pageInfo.hasPreviousPage {
@@ -134,7 +134,7 @@ pub fn fetch_results(
             ),
             start_date,
             end_date,
-        );
+        )?;
 
         // Ordering here is not that important, happens later anyway.
         next.data
@@ -143,5 +143,5 @@ pub fn fetch_results(
             .extend(aggregated.data.timelogs.nodes);
         aggregated = next;
     }
-    aggregated
+    Ok(aggregated)
 }
