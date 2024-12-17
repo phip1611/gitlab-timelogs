@@ -85,14 +85,19 @@ fn fetch_result(
     let url = format!("https://{host}/api/graphql", host = host);
     let client = Client::new();
 
-    client
+    match client
         .post(url)
         .header(AUTHORIZATION, authorization)
         .json(&payload)
         .send()
         .unwrap()
-        .json::<Response>()
-        .unwrap()
+        .error_for_status()
+    {
+        Ok(response) => response.json::<Response>().unwrap(),
+        Err(err) => {
+            panic!("Request to Gitlab failed: {err}")
+        }
+    }
 }
 
 /// Fetches all results from the API with pagination in mind.
