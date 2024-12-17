@@ -1,5 +1,24 @@
 # Unreleased (Yet)
 
+## v0.5.0 (2024-12-17)
+
+- Added basic error reporting. For example, the CLI might now tell you:
+  - ```
+    Error:
+    Failed to parse response body as JSON
+
+    Caused by:
+        0: error decoding response body
+        1: missing field `webUrl2` at line 1 column 308
+    ```
+  - ```
+    Error:
+    Failed to receive proper response
+
+    Caused by:
+        HTTP status client error (401 Unauthorized) for url (https://gitlab.vpn.cyberus-technology.de/api/graphql)
+    ```
+
 ## v0.4.1 (2024-12-17)
 
 - Better error reporting: it is now clearer if the request failed due to a
