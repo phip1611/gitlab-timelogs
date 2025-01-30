@@ -50,9 +50,9 @@ fn naive_date_to_local_datetime(date: NaiveDate) -> DateTime<Local> {
 /// - `username`: The exact GitLab username of the user.
 /// - `host`: Host name of the GitLab instance without `https://`
 /// - `token`: GitLab token to access the GitLab instance. Must have at least
-///            READ access.
+///   READ access.
 /// - `before`: Identifier from previous request to get the next page of the
-///             paginated result.
+///   paginated result.
 /// - `start_date`: Inclusive begin date.
 /// - `end_date`: Inclusive end date.
 fn fetch_result(
@@ -116,7 +116,7 @@ pub fn response_apply_filters(mut response: Response, filter_group: Option<&str>
 /// - `username`: The exact GitLab username of the user.
 /// - `host`: Host name of the GitLab instance without `https://`
 /// - `token`: GitLab token to access the GitLab instance. Must have at least
-///            READ access.
+///   READ access.
 /// - `start_date`: Inclusive begin date.
 /// - `end_date`: Inclusive end date.
 pub fn fetch_results(
@@ -139,7 +139,7 @@ pub fn fetch_results(
             .startCursor
             .as_ref()
             .expect("Should be valid string at this point");
-        let next = fetch_result(username, host, token, Some(&cursor), start_date, end_date)?;
+        let next = fetch_result(username, host, token, Some(cursor), start_date, end_date)?;
         let mut next = response_apply_filters(next, filter_group);
 
         // Ordering here is not that important, happens later anyway.

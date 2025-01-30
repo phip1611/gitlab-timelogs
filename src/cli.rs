@@ -102,6 +102,7 @@ pub struct CliArgs {
     filter_group: Option<String>,
 }
 
+#[allow(clippy::missing_const_for_fn)] // bug in clippy 0.1.86
 impl CliArgs {
     pub fn host(&self) -> &str {
         &self.gitlab_host
@@ -124,7 +125,7 @@ impl CliArgs {
         self.print_extended_summary
     }
     pub fn filter_group(&self) -> Option<&str> {
-        self.filter_group.as_ref().map(String::as_str)
+        self.filter_group.as_deref()
     }
 }
 
