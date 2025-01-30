@@ -100,6 +100,16 @@ fn fetch_result(
         .context("Failed to parse response body as JSON")
 }
 
+/// Applies local filters onto the response nodes.
+pub fn response_apply_filters(mut response: Response, filter_group: Option<&str>) -> Response {
+    if let Some(filter_group) = filter_group {
+        response.data.timelogs.nodes.retain(|node| {
+            node.project.group.as_ref().map(|g| g.fullPath.as_str()) == Some(filter_group)
+        })
+    }
+    response
+}
+
 /// Fetches all results from the API with pagination in mind.
 ///
 /// # Parameters
@@ -115,26 +125,22 @@ pub fn fetch_results(
     token: &str,
     start_date: NaiveDate,
     end_date: NaiveDate,
+    filter_group: Option<&str>,
 ) -> anyhow::Result<Response> {
     let base = fetch_result(username, host, token, None, start_date, end_date)?;
+    let base = response_apply_filters(base, filter_group);
 
     let mut aggregated = base;
     while aggregated.data.timelogs.pageInfo.hasPreviousPage {
-        let mut next = fetch_result(
-            username,
-            host,
-            token,
-            Some(
-                &aggregated
-                    .data
-                    .timelogs
-                    .pageInfo
-                    .startCursor
-                    .expect("Should be valid string at this point"),
-            ),
-            start_date,
-            end_date,
-        )?;
+        let cursor = aggregated
+            .data
+            .timelogs
+            .pageInfo
+            .startCursor
+            .as_ref()
+            .expect("Should be valid string at this point");
+        let next = fetch_result(username, host, token, Some(&cursor), start_date, end_date)?;
+        let mut next = response_apply_filters(next, filter_group);
 
         // Ordering here is not that important, happens later anyway.
         next.data

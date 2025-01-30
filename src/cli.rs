@@ -95,6 +95,11 @@ pub struct CliArgs {
     /// epic.
     #[arg(short = 'x', long = "extended-summary")]
     print_extended_summary: bool,
+    /// Filter for the GitLab group, such as `mycompany/team-x`. This refers to
+    /// the URL path of the group, not the name. Must only contain internal
+    /// slashes and no leading or terminating slashes.
+    #[arg(long)]
+    filter_group: Option<String>,
 }
 
 impl CliArgs {
@@ -115,9 +120,11 @@ impl CliArgs {
     pub const fn after(&self) -> NaiveDate {
         self.gitlab_after
     }
-
     pub const fn print_extended_summary(&self) -> bool {
         self.print_extended_summary
+    }
+    pub fn filter_group(&self) -> Option<&str> {
+        self.filter_group.as_ref().map(String::as_str)
     }
 }
 
