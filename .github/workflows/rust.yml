@@ -23,7 +23,7 @@ jobs:
       - name: cargo fmt
         run: cargo fmt -- --check
       - name: cargo clippy
-        run: cargo clippy
+        run: cargo clippy --all-targets --all-features
 
   build_regular:
     name: Build (regular)
