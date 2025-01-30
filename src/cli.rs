@@ -95,32 +95,43 @@ pub struct CliArgs {
     /// epic.
     #[arg(short = 'x', long = "extended-summary")]
     print_extended_summary: bool,
+    /// When specified, restricts results to groups whose full path (e.g.,
+    /// `team-x/project-y`) contains the given value or matches it exactly.
+    ///
+    /// The filter is case-sensitive.
+    #[arg(long)]
+    filter_group: Option<String>,
 }
 
 impl CliArgs {
-    #[allow(clippy::missing_const_for_fn)] // to keep MSRV
     pub fn host(&self) -> &str {
         &self.gitlab_host
     }
-    #[allow(clippy::missing_const_for_fn)] // to keep MSRV
+
     pub fn username(&self) -> &str {
         &self.gitlab_username
     }
-    #[allow(clippy::missing_const_for_fn)] // to keep MSRV
+
     pub fn token(&self) -> &str {
         &self.gitlab_token
     }
+
     pub fn before(&self) -> NaiveDate {
         // This is a bit of a hack, because Clap's default_value_t doesn't seem
         // to work with clap_serde_derive. *sigh*
         self.gitlab_before.unwrap_or_else(current_date)
     }
+
     pub const fn after(&self) -> NaiveDate {
         self.gitlab_after
     }
 
     pub const fn print_extended_summary(&self) -> bool {
         self.print_extended_summary
+    }
+
+    pub fn filter_group(&self) -> Option<&str> {
+        self.filter_group.as_deref()
     }
 }
 

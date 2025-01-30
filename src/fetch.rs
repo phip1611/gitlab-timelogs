@@ -26,7 +26,7 @@ SOFTWARE.
 //!
 //! [`fetch_results`] is the entry point.
 
-use crate::gitlab_api::types::{Response, ResponseData, ResponseSerialized};
+use crate::gitlab_api::types::{ResponseData, ResponseSerialized};
 use anyhow::Context;
 use chrono::{DateTime, Local, NaiveDate, NaiveTime};
 use reqwest::blocking::Client;
@@ -43,8 +43,11 @@ fn naive_date_to_local_datetime(date: NaiveDate) -> DateTime<Local> {
 }
 
 /// Performs a single request against the GitLab API, getting exactly one page
-/// of the paged data source. The data is filtered for the date span to make the
-/// request smaller/quicker.
+/// of the paged data source.
+///
+/// The data is filtered for the date span to make the request smaller and
+/// thus much quicker. Other filters are applied locally after the server
+/// response has been fetched.
 ///
 /// # Parameters
 /// - `username`: The exact GitLab username of the user.
@@ -55,14 +58,18 @@ fn naive_date_to_local_datetime(date: NaiveDate) -> DateTime<Local> {
 ///   paginated result.
 /// - `start_date`: Inclusive begin date.
 /// - `end_date`: Inclusive end date.
-fn fetch_result(
+/// - `filter_group`: Optional group filter, such as `Engineering/ProjectA`.
+///   If provided, the filter must be contained in the full group name of the
+///   entry.
+fn fetch_response_data(
     username: &str,
     host: &str,
     token: &str,
     before: Option<&str>,
     start_date: NaiveDate,
     end_date: NaiveDate,
-) -> anyhow::Result<Response> {
+    filter_group: Option<&str>,
+) -> anyhow::Result<ResponseData> {
     let graphql_query = GRAPHQL_TEMPLATE
         .replace("%USERNAME%", username)
         .replace("%BEFORE%", before.unwrap_or_default())
@@ -95,13 +102,40 @@ fn fetch_result(
         .error_for_status()
         .context("Failed to receive proper response")?;
 
-    plain_response
+    let response = plain_response
         .json::<ResponseSerialized>()
         .context("Failed to parse response body as JSON")
-        .map(|x| x.into_typed())
+        .map(|x| x.into_typed());
+
+    let response_data = response?.into_result()?;
+    let response_data_filtered = response_data_apply_filters(response_data, filter_group);
+    Ok(response_data_filtered)
 }
 
-/// Fetches all results from the API with pagination in mind.
+/// Applies local filters onto the response nodes and returns a filtered object.
+fn response_data_apply_filters(
+    mut response: ResponseData,
+    filter_group: Option<&str>,
+) -> ResponseData /* filtered */ {
+    // We look for each node if it passes all filters. Otherwise, we remove it.
+    response.timelogs.nodes.retain(|node| {
+        // For each filter: we remove not matching items
+        if let (Some(filter), Some(group)) = (filter_group, &node.project.group) {
+            // case-sensitive search
+            let has_group = group.fullName.contains(filter) || group.fullPath.contains(filter);
+            if !has_group {
+                return false;
+            }
+        }
+
+        // We retain everything that was not filtered out.
+        true
+    });
+    response
+}
+
+/// Fetches all results from the API with pagination in mind and returns
+/// an aggregated single result.
 ///
 /// # Parameters
 /// - `username`: The exact GitLab username of the user.
@@ -116,27 +150,35 @@ pub fn fetch_results(
     token: &str,
     start_date: NaiveDate,
     end_date: NaiveDate,
+    filter_group: Option<&str>,
 ) -> anyhow::Result<ResponseData> {
-    let base = fetch_result(username, host, token, None, start_date, end_date)?;
-    let base = base.into_result().map_err(anyhow::Error::new)?;
+    let base = fetch_response_data(
+        username,
+        host,
+        token,
+        None,
+        start_date,
+        end_date,
+        filter_group,
+    )?;
 
     let mut aggregated = base;
     while aggregated.timelogs.pageInfo.hasPreviousPage {
-        let next = fetch_result(
+        let cursor = &aggregated
+            .timelogs
+            .pageInfo
+            .startCursor
+            .expect("Should be valid string at this point");
+
+        let mut next = fetch_response_data(
             username,
             host,
             token,
-            Some(
-                &aggregated
-                    .timelogs
-                    .pageInfo
-                    .startCursor
-                    .expect("Should be valid string at this point"),
-            ),
+            Some(cursor),
             start_date,
             end_date,
+            filter_group,
         )?;
-        let mut next = next.into_result().map_err(anyhow::Error::new)?;
 
         // Ordering here is not that important, happens later anyway.
         next.timelogs.nodes.extend(aggregated.timelogs.nodes);
