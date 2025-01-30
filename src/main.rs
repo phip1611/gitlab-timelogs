@@ -72,6 +72,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         cfg.token(),
         cfg.after(),
         cfg.before(),
+        cfg.filter_group(),
     )?;
 
     println!("Host     : {}", cfg.host());

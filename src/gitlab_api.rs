@@ -47,6 +47,7 @@ pub mod types {
     #[derive(Clone, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
     pub struct Group {
         pub fullName: String,
+        pub fullPath: String,
     }
 
     #[derive(Clone, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]

@@ -50,9 +50,9 @@ fn naive_date_to_local_datetime(date: NaiveDate) -> DateTime<Local> {
 /// - `username`: The exact GitLab username of the user.
 /// - `host`: Host name of the GitLab instance without `https://`
 /// - `token`: GitLab token to access the GitLab instance. Must have at least
-///            READ access.
+///   READ access.
 /// - `before`: Identifier from previous request to get the next page of the
-///             paginated result.
+///   paginated result.
 /// - `start_date`: Inclusive begin date.
 /// - `end_date`: Inclusive end date.
 fn fetch_result(
@@ -100,13 +100,23 @@ fn fetch_result(
         .context("Failed to parse response body as JSON")
 }
 
+/// Applies local filters onto the response nodes.
+pub fn response_apply_filters(mut response: Response, filter_group: Option<&str>) -> Response {
+    if let Some(filter_group) = filter_group {
+        response.data.timelogs.nodes.retain(|node| {
+            node.project.group.as_ref().map(|g| g.fullPath.as_str()) == Some(filter_group)
+        })
+    }
+    response
+}
+
 /// Fetches all results from the API with pagination in mind.
 ///
 /// # Parameters
 /// - `username`: The exact GitLab username of the user.
 /// - `host`: Host name of the GitLab instance without `https://`
 /// - `token`: GitLab token to access the GitLab instance. Must have at least
-///            READ access.
+///   READ access.
 /// - `start_date`: Inclusive begin date.
 /// - `end_date`: Inclusive end date.
 pub fn fetch_results(
@@ -115,26 +125,22 @@ pub fn fetch_results(
     token: &str,
     start_date: NaiveDate,
     end_date: NaiveDate,
+    filter_group: Option<&str>,
 ) -> anyhow::Result<Response> {
     let base = fetch_result(username, host, token, None, start_date, end_date)?;
+    let base = response_apply_filters(base, filter_group);
 
     let mut aggregated = base;
     while aggregated.data.timelogs.pageInfo.hasPreviousPage {
-        let mut next = fetch_result(
-            username,
-            host,
-            token,
-            Some(
-                &aggregated
-                    .data
-                    .timelogs
-                    .pageInfo
-                    .startCursor
-                    .expect("Should be valid string at this point"),
-            ),
-            start_date,
-            end_date,
-        )?;
+        let cursor = aggregated
+            .data
+            .timelogs
+            .pageInfo
+            .startCursor
+            .as_ref()
+            .expect("Should be valid string at this point");
+        let next = fetch_result(username, host, token, Some(cursor), start_date, end_date)?;
+        let mut next = response_apply_filters(next, filter_group);
 
         // Ordering here is not that important, happens later anyway.
         next.data

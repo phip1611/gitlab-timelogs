@@ -95,8 +95,14 @@ pub struct CliArgs {
     /// epic.
     #[arg(short = 'x', long = "extended-summary")]
     print_extended_summary: bool,
+    /// Filter for the GitLab group, such as `mycompany/team-x`. This refers to
+    /// the URL path of the group, not the name. Must only contain internal
+    /// slashes and no leading or terminating slashes.
+    #[arg(long)]
+    filter_group: Option<String>,
 }
 
+#[allow(clippy::missing_const_for_fn)] // bug in clippy 0.1.86
 impl CliArgs {
     pub fn host(&self) -> &str {
         &self.gitlab_host
@@ -115,9 +121,11 @@ impl CliArgs {
     pub const fn after(&self) -> NaiveDate {
         self.gitlab_after
     }
-
     pub const fn print_extended_summary(&self) -> bool {
         self.print_extended_summary
+    }
+    pub fn filter_group(&self) -> Option<&str> {
+        self.filter_group.as_deref()
     }
 }
 
