@@ -98,12 +98,15 @@ pub struct CliArgs {
 }
 
 impl CliArgs {
+    #[allow(clippy::missing_const_for_fn)] // to keep MSRV
     pub fn host(&self) -> &str {
         &self.gitlab_host
     }
+    #[allow(clippy::missing_const_for_fn)] // to keep MSRV
     pub fn username(&self) -> &str {
         &self.gitlab_username
     }
+    #[allow(clippy::missing_const_for_fn)] // to keep MSRV
     pub fn token(&self) -> &str {
         &self.gitlab_token
     }
