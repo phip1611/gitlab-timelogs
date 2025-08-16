@@ -1,13 +1,12 @@
 # gitlab-timelogs CLI
 
-CLI utility to assist you with your time logs in GitLab. The GitLab web UI for
-time logs is very rudimentary and the UX is poor (June 2024, GitLab 16.11),
-especially a summary view is missing. This is where `gitlab-timelogs` help you
-by leveraging the GitLab API.
+A lightweight CLI to fetch, summarize, and validate your GitLab issue
+time logs. Group entries by week, filter by date ranges, and spot anomalies
+like weekend work or >10h days. Read-only, fast, and cross-platform - built
+to make time tracking in GitLab finally usable.
 
-This CLI is made by developers for developers who want to check their timelogs
-at the of the work day or week. `gitlab-timelogs` **is not** associated with the
-official GitLab project!
+Made by developers for developers. `gitlab-timelogs` **is not** associated
+with the official GitLab project!
 
 ![screenshot.png](screenshot.png)
 (_The screenshot is slightly outdated. The latest version shows more information._)
@@ -21,26 +20,32 @@ to inspect existing records, so you can fix them in GitLab (if necessary).
 - ✅ collect time logs from issues (timelogs associated with MRs currently not
   supported)
 - ✅ group them by week
-- ✅ specify time range
+- ✅ specify time range and apply filters (such as group filter)
 - ✅ print warnings for common pitfalls:
     - accounted less than 15 minutes to an issue (typically a mistake)
     - accounted time to a Saturday or Sunday (not common in normal positions)
+      (at least in Europe 😀)
     - accounted more than 10h a day (10h is the legal maximum in Germany)
-- ✅ Created for GitLab 16.11. Older and newer versions should work as well,
-     but haven't been tested. Note that the free tier may not support time
-     logs, but only the enterprise edition.
+
+## GitLab Server Support
+
+Development of this CLI began with GitLab 16.11. Since then, it has been
+regularly tested against the latest stable release (currently 18.2). Because it
+only relies on basic parts of the GitLab API, it should work across a wide
+range of GitLab versions.
+
+Note: Certain features may be unavailable on the GitLab Free tier.
 
 ## Supported Platforms
 _(For compilation and running.)_
 
 `gitlab-timelogs` builds and runs at least on the following platforms:
 
-- Linux (all architectures, I guess?)
-- MacOS (all architectures, I guess?)
-- Windows (all architectures, I guess?)
+- ✅ Linux
+- ✅ MacOS
+- ✅ Windows
 
-Note that I only tested recent versions of these OSs in Mid-2024. Older versions
-of these systems should work as well.
+including different versions and architectures that Rust supports (x86, ARM).
 
 ## Consume / Install
 
@@ -106,8 +111,8 @@ The MSRV is Rust stable `1.85.0`.
 ## Trivia
 
 The main motivation to create this was the unbelievable poor UX of the GitLab
-web UI for time logs. For example, the input mask transformed a `1h 30` to
-`3d 7h` instead of `1h 30m`. This common pitfall was unbelievable annoying and
+web UI for time logs at that given time. For example, the input mask transformed a `1h 30` to
+`3d 7h` instead of `1h 30m`. This common pitfall was unbelievably annoying and
 hard to spot - badly influencing a lot of our time records.
 
 Hence, I created this as part of my work time at [Cyberus Technology GmbH](https://cyberus-technology.de)

@@ -72,6 +72,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         cfg.token(),
         cfg.after(),
         cfg.before(),
+        cfg.filter_group(),
     )?;
 
     println!("Host     : {}", cfg.host());
@@ -85,7 +86,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     if nodes.is_empty() {
         print_warning(
-            "Empty response. Is the username correct? Does the token has read permission?",
+            "Empty response. Is the username correct? Does the token have read permission?",
             0,
         );
     } else {
