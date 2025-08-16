@@ -1,9 +1,13 @@
 [package]
 name = "gitlab-timelogs"
 description = """
-CLI utility to assist you with your time logs in GitLab.
+A lightweight CLI to fetch, summarize, and validate your GitLab issue
+time logs. Group entries by week, filter by date ranges, and spot anomalies
+like weekend work or >10h days. Read-only, fast, and cross-platform - built
+to make time tracking in GitLab finally usable. 
 
-gitlab-timelogs is not associated with the official GitLab project!
+Made by developers for developers. gitlab-timelogs is not associated
+with the official GitLab project!
 """
 version = "0.6.0"
 edition = "2024"
