@@ -45,7 +45,7 @@ use crate::cfg::get_cfg;
 use crate::cli::CliArgs;
 use crate::fetch::fetch_results;
 use crate::gitlab_api::types::ResponseNode;
-use anyhow::{anyhow, Context};
+use anyhow::{Context, anyhow};
 use chrono::{Datelike, NaiveDate, Weekday};
 use nu_ansi_term::{Color, Style};
 use std::error::Error;
