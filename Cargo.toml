@@ -19,6 +19,11 @@ authors = [
   "Philipp Schuster <phip1611@gmail.com>"
 ]
 
+[profile.release]
+opt-level = "s"
+lto = true
+strip = true
+
 [dependencies]
 anyhow = "~1.0"
 chrono = { version = "~0.4", default-features = false, features = ["clock", "std", "serde"] }
