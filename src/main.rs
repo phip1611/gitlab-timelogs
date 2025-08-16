@@ -45,7 +45,7 @@ use crate::cfg::get_cfg;
 use crate::cli::CliArgs;
 use crate::fetch::fetch_results;
 use crate::gitlab_api::types::ResponseNode;
-use anyhow::{anyhow, Context};
+use anyhow::{Context, anyhow};
 use chrono::{Datelike, NaiveDate, Weekday};
 use nu_ansi_term::{Color, Style};
 use std::error::Error;
@@ -81,7 +81,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     // All nodes but as vector to references.
     // Simplifies the handling with other parts of the code, especially the
     // `views` module.
-    let nodes = response.data.timelogs.nodes.iter().collect::<Vec<_>>();
+    let nodes = response.timelogs.nodes.iter().collect::<Vec<_>>();
 
     if nodes.is_empty() {
         print_warning(
@@ -108,14 +108,12 @@ fn print_timelog(log: &ResponseNode) {
     );
     let min_minutes_threshold = 15;
     if !duration_is_positive {
-        // msg is aligned with the suspicious data output
         print_warning(
             "^ ERROR: You have logged this time as NEGATIVE: Update the ticket!",
             3,
         );
     }
     if duration.as_secs() / 60 < min_minutes_threshold {
-        // msg is aligned with the suspicious data output
         print_warning("^ WARN: Less than 15 minutes! Is this correct?", 6);
     }
 
@@ -165,13 +163,11 @@ fn print_date(day: &NaiveDate, nodes_of_day: &[&ResponseNode]) {
     {
         let max_hours_threshold = 10;
         if total.as_secs() > max_hours_threshold * 60 * 60 {
-            // msg is aligned with the suspicious data output
             print_warning("^ WARN: More than 10 hours! Is this correct?", 18);
         }
 
         match day.weekday() {
             Weekday::Sat | Weekday::Sun => {
-                // msg is aligned with the suspicious data output
                 print_warning("^ WARN: You shouldn't work on the weekend, right?", 12);
             }
             _ => {}

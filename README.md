@@ -101,7 +101,7 @@ gitlab-timelogs = {
 
 ## MSRV
 
-The MSRV is Rust stable `1.74.0`.
+The MSRV is Rust stable `1.85.0`.
 
 ## Trivia
 

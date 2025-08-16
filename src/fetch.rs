@@ -26,7 +26,7 @@ SOFTWARE.
 //!
 //! [`fetch_results`] is the entry point.
 
-use crate::gitlab_api::types::Response;
+use crate::gitlab_api::types::{Response, ResponseData, ResponseSerialized};
 use anyhow::Context;
 use chrono::{DateTime, Local, NaiveDate, NaiveTime};
 use reqwest::blocking::Client;
@@ -96,8 +96,9 @@ fn fetch_result(
         .context("Failed to receive proper response")?;
 
     plain_response
-        .json::<Response>()
+        .json::<ResponseSerialized>()
         .context("Failed to parse response body as JSON")
+        .map(|x| x.into_typed())
 }
 
 /// Fetches all results from the API with pagination in mind.
@@ -115,18 +116,18 @@ pub fn fetch_results(
     token: &str,
     start_date: NaiveDate,
     end_date: NaiveDate,
-) -> anyhow::Result<Response> {
+) -> anyhow::Result<ResponseData> {
     let base = fetch_result(username, host, token, None, start_date, end_date)?;
+    let base = base.into_result().map_err(anyhow::Error::new)?;
 
     let mut aggregated = base;
-    while aggregated.data.timelogs.pageInfo.hasPreviousPage {
-        let mut next = fetch_result(
+    while aggregated.timelogs.pageInfo.hasPreviousPage {
+        let next = fetch_result(
             username,
             host,
             token,
             Some(
                 &aggregated
-                    .data
                     .timelogs
                     .pageInfo
                     .startCursor
@@ -135,12 +136,10 @@ pub fn fetch_results(
             start_date,
             end_date,
         )?;
+        let mut next = next.into_result().map_err(anyhow::Error::new)?;
 
         // Ordering here is not that important, happens later anyway.
-        next.data
-            .timelogs
-            .nodes
-            .extend(aggregated.data.timelogs.nodes);
+        next.timelogs.nodes.extend(aggregated.timelogs.nodes);
         aggregated = next;
     }
     Ok(aggregated)

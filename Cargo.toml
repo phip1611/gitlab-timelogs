@@ -5,8 +5,9 @@ CLI utility to assist you with your time logs in GitLab.
 
 gitlab-timelogs is not associated with the official GitLab project!
 """
-version = "0.5.0"
-edition = "2021"
+version = "0.6.0"
+edition = "2024"
+rust-version = "1.85.0"
 keywords = ["gitlab", "productivity"]
 categories = ["command-line-utilities"]
 readme = "README.md"
@@ -18,17 +19,22 @@ authors = [
   "Philipp Schuster <phip1611@gmail.com>"
 ]
 
+[profile.release]
+opt-level = "s"
+lto = true
+strip = true
+
 [dependencies]
-anyhow = "1.0.94"
-chrono = { version = "0.4.38", default-features = false, features = ["clock", "std", "serde"] }
-nu-ansi-term = "0.50.0"
-reqwest = { version =  "0.12.4", features = ["blocking", "json"] }
-serde = { version = "1.0.203", features = ["derive"] }
-serde_json = "1.0.117"
-toml = "0.8.14"
+anyhow = "~1.0"
+chrono = { version = "~0.4", default-features = false, features = ["clock", "std", "serde"] }
+nu-ansi-term = "~0.50"
+reqwest = { version =  "~0.12", features = ["blocking", "json"] }
+serde = { version = "~1.0", features = ["derive"] }
+serde_json = "~1.0"
+toml = "~0.9"
 
 [dependencies.clap]
-version = "~4.5.4"
+version = "~4.5"
 features = [
     "color",
     "derive",
