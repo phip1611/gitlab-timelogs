@@ -1,5 +1,13 @@
 # Unreleased (Yet)
 
+## v0.6.0 (2025-08-16)
+
+- GraphQL Error Responses from GitLab are now handled and displayer properly
+  ([#38](https://github.com/phip1611/gitlab-timelogs/issues/38))
+- Updated dependencies
+- Use Rust edition 2024
+- MSRV is now 1.85
+
 ## v0.5.0 (2024-12-17)
 
 - Added basic error reporting. For example, the CLI might now tell you:
