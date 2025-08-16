@@ -98,7 +98,7 @@ fn fetch_result(
     plain_response
         .json::<ResponseSerialized>()
         .context("Failed to parse response body as JSON")
-        .map(|x| x.to_typed())
+        .map(|x| x.into_typed())
 }
 
 /// Fetches all results from the API with pagination in mind.
@@ -118,7 +118,7 @@ pub fn fetch_results(
     end_date: NaiveDate,
 ) -> anyhow::Result<ResponseData> {
     let base = fetch_result(username, host, token, None, start_date, end_date)?;
-    let base = base.to_result().map_err(|err| anyhow::Error::new(err))?;
+    let base = base.into_result().map_err(anyhow::Error::new)?;
 
     let mut aggregated = base;
     while aggregated.timelogs.pageInfo.hasPreviousPage {
@@ -136,7 +136,7 @@ pub fn fetch_results(
             start_date,
             end_date,
         )?;
-        let mut next = next.to_result().map_err(|err| anyhow::Error::new(err))?;
+        let mut next = next.into_result().map_err(anyhow::Error::new)?;
 
         // Ordering here is not that important, happens later anyway.
         next.timelogs.nodes.extend(aggregated.timelogs.nodes);

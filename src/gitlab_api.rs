@@ -170,10 +170,10 @@ pub mod types {
 
     impl Response {
         /// Transforms the GraphQL response to a Rust [`Result`].
-        pub fn to_result(self) -> Result<ResponseData, GraphQLErrorsResponse> {
+        pub fn into_result(self) -> Result<ResponseData, GraphQLErrorsResponse> {
             match self {
-                Response::PayloadResponse(payload) => Ok(payload),
-                Response::ErrorResponse(errors) => Err(errors),
+                Self::PayloadResponse(payload) => Ok(payload),
+                Self::ErrorResponse(errors) => Err(errors),
             }
         }
     }
@@ -188,13 +188,13 @@ pub mod types {
 
     impl ResponseSerialized {
         /// Transforms the GraphQL response to a Rust [`Result`].
-        pub fn to_typed(self) -> Response {
+        pub fn into_typed(self) -> Response {
             match self {
-                ResponseSerialized {
+                Self {
                     data: Some(data),
                     errors: None,
                 } => Response::PayloadResponse(data),
-                ResponseSerialized {
+                Self {
                     data: None,
                     errors: Some(errors),
                 } => Response::ErrorResponse(errors),
