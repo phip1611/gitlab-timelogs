@@ -28,7 +28,10 @@ SOFTWARE.
 #[allow(non_snake_case)]
 pub mod types {
     use chrono::{DateTime, Local, NaiveDate};
+    use fmt::{Debug, Display};
     use serde::Deserialize;
+    use std::error::Error;
+    use std::fmt;
     use std::time::Duration;
 
     #[derive(Clone, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -105,10 +108,101 @@ pub mod types {
         pub timelogs: ResponseTimelogs,
     }
 
-    /// The response from the GitLab API with all timelogs for the given
-    /// time frame.
     #[derive(Clone, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
-    pub struct Response {
-        pub data: ResponseData,
+    pub struct GraphQLErrorLocation {
+        line: u64,
+        column: u64,
+    }
+
+    impl Display for GraphQLErrorLocation {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "line {}, column {}", self.line, self.column)
+        }
+    }
+
+    #[derive(Clone, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    pub struct GraphQLErrorResponse {
+        pub message: String,
+        pub locations: Vec<GraphQLErrorLocation>,
+    }
+
+    impl Display for GraphQLErrorResponse {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "{}", self.message)?;
+            if !self.locations.is_empty() {
+                let locs: Vec<String> = self.locations.iter().map(|loc| loc.to_string()).collect();
+                write!(f, " (at {})", locs.join(", "))?;
+            }
+            Ok(())
+        }
+    }
+
+    impl Error for GraphQLErrorResponse {}
+
+    #[derive(Clone, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    pub struct GraphQLErrorsResponse(pub Vec<GraphQLErrorResponse>);
+
+    impl Display for GraphQLErrorsResponse {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            if self.0.is_empty() {
+                write!(f, "No GraphQL errors")
+            } else if self.0.len() == 1 {
+                write!(f, "GraphQL error: {}", self.0[0])
+            } else {
+                writeln!(f, "{} GraphQL errors:", self.0.len())?;
+                for (i, err) in self.0.iter().enumerate() {
+                    writeln!(f, "  {}. {}", i + 1, err)?;
+                }
+                Ok(())
+            }
+        }
+    }
+
+    impl Error for GraphQLErrorsResponse {}
+
+    /// The serialized/typed GraphQL response from the GitLab API with all
+    /// timelogs for the given time frame.
+    #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    pub enum Response {
+        PayloadResponse(ResponseData),
+        ErrorResponse(GraphQLErrorsResponse),
+    }
+
+    impl Response {
+        /// Transforms the GraphQL response to a Rust [`Result`].
+        pub fn to_result(self) -> Result<ResponseData, GraphQLErrorsResponse> {
+            match self {
+                Response::PayloadResponse(payload) => Ok(payload),
+                Response::ErrorResponse(errors) => Err(errors),
+            }
+        }
+    }
+
+    /// The serialized/typed GraphQL response from the GitLab API with all
+    /// timelogs for the given time frame.
+    #[derive(Clone, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    pub struct ResponseSerialized {
+        pub data: Option<ResponseData>,
+        pub errors: Option<GraphQLErrorsResponse>,
+    }
+
+    impl ResponseSerialized {
+        /// Transforms the GraphQL response to a Rust [`Result`].
+        pub fn to_typed(self) -> Response {
+            match self {
+                ResponseSerialized {
+                    data: Some(data),
+                    errors: None,
+                } => Response::PayloadResponse(data),
+                ResponseSerialized {
+                    data: None,
+                    errors: Some(errors),
+                } => Response::ErrorResponse(errors),
+                _ => panic!(
+                    "Unexpected response: data={:#?}, errors={:#?}",
+                    self.data, self.errors
+                ),
+            }
+        }
     }
 }
