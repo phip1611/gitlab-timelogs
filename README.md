@@ -51,7 +51,7 @@ including different versions and architectures that Rust supports (x86, ARM).
 
 **Via cargo:**
 
-- `$ cargo install https://github.com/phip1611/gitlab-timelogs`
+- `$ cargo install gitlab-timelogs`
 
 **Via Nix / on NixOS:**
 
