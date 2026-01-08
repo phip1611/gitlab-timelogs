@@ -24,7 +24,7 @@
     Failed to receive proper response
 
     Caused by:
-        HTTP status client error (401 Unauthorized) for url (https://gitlab.vpn.cyberus-technology.de/api/graphql)
+        HTTP status client error (401 Unauthorized) for url (https://gitlab.example.com/api/graphql)
     ```
 
 ## v0.4.1 (2024-12-17)

@@ -56,14 +56,14 @@ including different versions and architectures that Rust supports (x86, ARM).
 **Via Nix / on NixOS:**
 
 - Option A: [via `nixpkgs`](https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=gitlab-timelogs)
-  - A1: Add `pkgs.gitlab-timelogs` to your packages
-  - A2: Use `nix-shell -p gitlab-timelogs`
+    - A1: Add `pkgs.gitlab-timelogs` to your packages
+    - A2: Use `nix-shell -p gitlab-timelogs`
 - Option B: consume this Flake/Repository
-  - B1: Add `gitlab-timelogs.nixosModules.default` (`gitlab-timelogs` is
-    referring to the flake input) to the modules of your NixOS configuration,
-    which will add `gitlab-timelogs` to your system-wide packages.
-  - B2: Open a shell: `$ nix shell github:phip1611/gitlab-timelogs`
-  - B3: Run the tool: `$ nix run github:phip1611/gitlab-timelogs -- <args>`
+    - B1: Add `gitlab-timelogs.nixosModules.default` (`gitlab-timelogs` is
+      referring to the flake input) to the modules of your NixOS configuration,
+      which will add `gitlab-timelogs` to your system-wide packages.
+    - B2: Open a shell: `$ nix shell github:phip1611/gitlab-timelogs`
+    - B3: Run the tool: `$ nix run github:phip1611/gitlab-timelogs -- <args>`
 
 **Via home-manager:**
 
@@ -76,7 +76,9 @@ gitlab-timelogs = {
   config = {
     gitlabHost = "gitlab.example.com";
     gitlabUsername = "exampleuser";
-    # Either write as a string here, or read from a file that you do not push:
+    # Token with global `read_api` permission.
+    #
+    # CAUTION! Do not push your token to a public git repository!
     gitlabToken = with builtins; readFile (toPath ./gitlab-token.txt);
   };
 };
@@ -85,7 +87,18 @@ gitlab-timelogs = {
 ## Usage
 
 - `$ gitlab-timelogs --help`
-- `$ gitlab-timelogs --host gitlab.vpn.cyberus-technology.de --username pschuster --token ********** --after 2024-06-01 --before 2024-06-30`
+
+If you created `config.toml` (see below):
+
+- `$ gitlab-timelogs`
+- `$ gitlab-timelogs --after 2024-06-01 --before 2024-06-30`
+
+otherwise, a direct invocation works as follows:
+
+- `$ GITLAB_TOKEN="your-token" gitlab-timelogs --host gitlab.example.com --username your-username`
+
+_**Hint**: You need a GitLab token with `read_api` permission. \
+<https://gitlab.example.com/-/user_settings/personal_access_tokens>_
 
 ### Configuration
 
@@ -101,6 +114,7 @@ gitlab-timelogs = {
     ```toml
     gitlab_host = "gitlab.example.com"
     gitlab_username = "<user>"
+    # Token with global `read_api` permission.
     gitlab_token = "<token>"
     ```
 
