@@ -1,11 +1,12 @@
-{ craneLib
-, darwin
-, lib
-, nix-gitignore
-, openssl
-, iconv
-, pkg-config
-, stdenv
+{
+  craneLib,
+  darwin,
+  lib,
+  nix-gitignore,
+  openssl,
+  iconv,
+  pkg-config,
+  stdenv,
 }:
 
 let
@@ -18,7 +19,8 @@ let
     ];
     buildInputs = [
       openssl
-    ] ++ lib.optionals stdenv.isDarwin [
+    ]
+    ++ lib.optionals stdenv.isDarwin [
       iconv
       darwin.apple_sdk.frameworks.SystemConfiguration
     ];
@@ -31,8 +33,11 @@ let
   # Downloaded and compiled dependencies.
   cargoArtifacts = craneLib.buildDepsOnly commonArgs;
 
-  cargoPackage = craneLib.buildPackage (commonArgs // {
-    inherit cargoArtifacts;
-  });
+  cargoPackage = craneLib.buildPackage (
+    commonArgs
+    // {
+      inherit cargoArtifacts;
+    }
+  );
 in
 cargoPackage
