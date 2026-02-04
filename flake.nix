@@ -84,11 +84,7 @@
         in
         {
           default = pkgs.mkShell {
-            inputsFrom = [ self.packages.${system}.default ];
-            nativeBuildInputs = [ pkgs.pkg-config ];
-            buildInputs = [
-              pkgs.openssl
-            ];
+            inputsFrom = builtins.attrValues self.packages.${system};
           };
         }
       );
