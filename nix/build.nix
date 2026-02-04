@@ -22,7 +22,6 @@ let
     ]
     ++ lib.optionals stdenv.isDarwin [
       iconv
-      darwin.apple_sdk.frameworks.SystemConfiguration
     ];
     # Fix build. Reference:
     # - https://github.com/sfackler/rust-openssl/issues/1430
