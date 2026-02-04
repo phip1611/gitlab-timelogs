@@ -1,5 +1,9 @@
 # Unreleased (Yet)
 
+## v0.7.0 (2026-02-04)
+
+- Shows the current week by default (instead of Monday-Today)
+
 ## v0.6.0 (2025-08-16)
 
 - GraphQL Error Responses from GitLab are now handled and displayer properly
