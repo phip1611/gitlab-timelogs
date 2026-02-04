@@ -4,7 +4,7 @@ description = """
 A lightweight CLI to fetch, summarize, and validate your GitLab issue
 time logs. Group entries by week, filter by date ranges, and spot anomalies
 like weekend work or >10h days. Read-only, fast, and cross-platform - built
-to make time tracking in GitLab finally usable. 
+to make time tracking in GitLab finally usable.
 
 Made by developers for developers. gitlab-timelogs is not associated
 with the official GitLab project!
@@ -21,6 +21,11 @@ repository = "https://github.com/phip1611/gitlab-timelogs"
 documentation = "https://docs.rs/gitlab-timelogs"
 authors = [
   "Philipp Schuster <phip1611@gmail.com>"
+]
+exclude = [
+  "./flake.lock",
+  "./flake.nix",
+  "./nix/",
 ]
 
 [profile.release]
