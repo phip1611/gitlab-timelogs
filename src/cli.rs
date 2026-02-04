@@ -23,7 +23,7 @@ SOFTWARE.
 */
 use chrono::{Datelike, Local, NaiveDate, TimeDelta, Weekday};
 use clap::Parser;
-use std::ops::Sub;
+use std::ops::{Add, Sub};
 
 #[derive(serde::Deserialize)]
 pub struct CfgFile {
@@ -81,12 +81,15 @@ pub struct CliArgs {
     #[arg(long = "token", env)]
     gitlab_token: String,
     /// Filter for newest date (inclusive). For example `2024-06-30`.
-    /// By default, this defaults to today (local time).
+    /// If unspecified, this defaults to the end of the week (Sunday, local
+    /// time).
     ///
     /// Must be no less than `--after`.
-    #[arg(long = "before")]
-    gitlab_before: Option<NaiveDate>,
+    #[arg(long = "before", default_value_t = get_default_before_date())]
+    gitlab_before: NaiveDate,
     /// Filter for oldest date (inclusive). For example `2024-06-01`.
+    /// If unspecified, this defaults to the beginning of the week (Monday,
+    /// local time).
     ///
     /// Must be no more than `--before`.
     #[arg(long = "after", default_value_t = get_default_after_date())]
@@ -116,10 +119,8 @@ impl CliArgs {
         &self.gitlab_token
     }
 
-    pub fn before(&self) -> NaiveDate {
-        // This is a bit of a hack, because Clap's default_value_t doesn't seem
-        // to work with clap_serde_derive. *sigh*
-        self.gitlab_before.unwrap_or_else(current_date)
+    pub const fn before(&self) -> NaiveDate {
+        self.gitlab_before
     }
 
     pub const fn after(&self) -> NaiveDate {
@@ -135,10 +136,22 @@ impl CliArgs {
     }
 }
 
-fn current_date() -> NaiveDate {
-    Local::now().naive_local().date()
+/// Returns the default `--before` date for [`CliArgs`].
+///
+/// Returns the previous next Sunday or today, if today is a Sunday.
+/// This makes sense as one typically wants to see what one has done in the
+/// current week.
+fn get_default_before_date() -> NaiveDate {
+    let now = Local::now();
+    let mut day = now;
+    while day.weekday() != Weekday::Sun {
+        day = day.add(TimeDelta::days(1));
+    }
+    day.naive_local().date()
 }
 
+/// Returns the default `--after` date for [`CliArgs`].
+///
 /// Returns the previous Monday or today, if today is a Monday.
 /// This makes sense as one typically wants to see what one has done in the
 /// current week.
