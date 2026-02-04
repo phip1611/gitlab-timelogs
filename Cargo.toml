@@ -23,9 +23,9 @@ authors = [
   "Philipp Schuster <phip1611@gmail.com>"
 ]
 exclude = [
-  "./flake.lock",
-  "./flake.nix",
-  "./nix/",
+  "flake.lock",
+  "flake.nix",
+  "nix/",
 ]
 
 [profile.release]
