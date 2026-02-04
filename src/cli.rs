@@ -80,13 +80,6 @@ pub struct CliArgs {
     /// on `https://<gitlab_host>/-/user_settings/personal_access_tokens`.
     #[arg(long = "token", env)]
     gitlab_token: String,
-    /// Filter for newest date (inclusive). For example `2024-06-30`.
-    /// If unspecified, this defaults to the end of the week (Sunday, local
-    /// time).
-    ///
-    /// Must be no less than `--after`.
-    #[arg(long = "before", default_value_t = get_default_before_date())]
-    gitlab_before: NaiveDate,
     /// Filter for oldest date (inclusive). For example `2024-06-01`.
     /// If unspecified, this defaults to the beginning of the week (Monday,
     /// local time).
@@ -94,6 +87,13 @@ pub struct CliArgs {
     /// Must be no more than `--before`.
     #[arg(long = "after", default_value_t = get_default_after_date())]
     gitlab_after: NaiveDate,
+    /// Filter for newest date (inclusive). For example `2024-06-30`.
+    /// If unspecified, this defaults to the end of the week (Sunday, local
+    /// time).
+    ///
+    /// Must be no less than `--after`.
+    #[arg(long = "before", default_value_t = get_default_before_date())]
+    gitlab_before: NaiveDate,
     /// Show an extended summary at the end with the time per issue and per
     /// epic.
     #[arg(short = 'x', long = "extended-summary")]
