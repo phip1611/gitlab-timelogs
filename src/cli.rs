@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+use anyhow::anyhow;
 use chrono::{Datelike, Local, NaiveDate, TimeDelta, Weekday};
 use clap::Parser;
 use std::ops::{Add, Sub};
@@ -80,20 +81,25 @@ pub struct CliArgs {
     /// on `https://<gitlab_host>/-/user_settings/personal_access_tokens`.
     #[arg(long = "token", env)]
     gitlab_token: String,
-    /// Filter for oldest date (inclusive). For example `2024-06-01`.
+    /// Filter for oldest date (begin, inclusive). For example `2024-06-01`.
     /// If unspecified, this defaults to the beginning of the week (Monday,
     /// local time).
     ///
     /// Must be no more than `--before`.
-    #[arg(long = "after", default_value_t = get_default_after_date())]
+    #[arg(long = "after", alias = "begin", default_value_t = get_default_after_date())]
     gitlab_after: NaiveDate,
-    /// Filter for newest date (inclusive). For example `2024-06-30`.
+    /// Filter for newest date (end, inclusive). For example `2024-06-30`.
     /// If unspecified, this defaults to the end of the week (Sunday, local
     /// time).
     ///
     /// Must be no less than `--after`.
-    #[arg(long = "before", default_value_t = get_default_before_date())]
+    #[arg(long = "before", alias = "end", default_value_t = get_default_before_date())]
     gitlab_before: NaiveDate,
+    /// Show the whole month.
+    ///
+    /// This has a higher precedence than `--after` and `--before`.
+    #[arg(long = "month")]
+    show_month: bool,
     /// Show an extended summary at the end with the time per issue and per
     /// epic.
     #[arg(short = 'x', long = "extended-summary")]
@@ -104,6 +110,20 @@ pub struct CliArgs {
     /// The filter is case-sensitive.
     #[arg(long)]
     filter_group: Option<String>,
+}
+
+impl CliArgs {
+    pub fn validate(&self) -> Result<(), anyhow::Error> {
+        if self.after() > self.before() {
+            return Err(anyhow!(
+                "invalid date range: `--after` ({}) must be earlier than `--before` ({})",
+                self.after(),
+                self.before(),
+            ));
+        };
+
+        Ok(())
+    }
 }
 
 impl CliArgs {
@@ -119,12 +139,20 @@ impl CliArgs {
         &self.gitlab_token
     }
 
-    pub const fn before(&self) -> NaiveDate {
-        self.gitlab_before
+    pub fn before(&self) -> NaiveDate {
+        if self.show_month {
+            get_month_end()
+        } else {
+            self.gitlab_before
+        }
     }
 
-    pub const fn after(&self) -> NaiveDate {
-        self.gitlab_after
+    pub fn after(&self) -> NaiveDate {
+        if self.show_month {
+            get_month_begin()
+        } else {
+            self.gitlab_after
+        }
     }
 
     pub const fn print_extended_summary(&self) -> bool {
@@ -162,4 +190,83 @@ fn get_default_after_date() -> NaiveDate {
         day = day.sub(TimeDelta::days(1));
     }
     day.naive_local().date()
+}
+
+/// Returns the first day of the current month.
+fn get_month_begin() -> NaiveDate {
+    let now = Local::now();
+    let now_date = now.date_naive();
+    now_date.with_day(1).unwrap()
+}
+
+/// Returns the last day of the current month.
+fn get_month_end() -> NaiveDate {
+    let now = Local::now();
+    let now_date = now.date_naive();
+    now_date
+        .with_day(now_date.num_days_in_month() as u32)
+        .unwrap()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::NaiveDate;
+
+    fn base_args(after: NaiveDate, before: NaiveDate) -> CliArgs {
+        CliArgs {
+            gitlab_host: "gitlab.example.com".into(),
+            gitlab_username: "user".into(),
+            gitlab_token: "token".into(),
+            gitlab_after: after,
+            gitlab_before: before,
+            show_month: false,
+            print_extended_summary: false,
+            filter_group: None,
+        }
+    }
+
+    #[test]
+    fn validate_accepts_equal_dates() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 1).unwrap();
+        let args = base_args(date, date);
+
+        assert!(args.validate().is_ok());
+    }
+
+    #[test]
+    fn validate_accepts_after_before() {
+        let after = NaiveDate::from_ymd_opt(2026, 2, 1).unwrap();
+        let before = NaiveDate::from_ymd_opt(2026, 2, 2).unwrap();
+        let args = base_args(after, before);
+
+        assert!(args.validate().is_ok());
+    }
+
+    #[test]
+    fn validate_rejects_after_later_than_before() {
+        let after = NaiveDate::from_ymd_opt(2026, 2, 2).unwrap();
+        let before = NaiveDate::from_ymd_opt(2026, 2, 1).unwrap();
+        let args = base_args(after, before);
+
+        let err = args.validate().expect_err("expected validation to fail");
+        let msg = err.to_string();
+
+        assert!(msg.contains("invalid date range"));
+        assert!(msg.contains("2026-02-02"));
+        assert!(msg.contains("2026-02-01"));
+    }
+
+    #[test]
+    fn validate_show_month_overrides_before_and_after() {
+        let after = NaiveDate::from_ymd_opt(2026, 2, 2).unwrap();
+        let before = NaiveDate::from_ymd_opt(2026, 2, 1).unwrap();
+
+        let mut args = base_args(after, before);
+
+        assert!(args.validate().is_err());
+
+        args.show_month = true;
+        assert!(args.validate().is_ok());
+    }
 }

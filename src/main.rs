@@ -45,7 +45,7 @@ use crate::cfg::get_cfg;
 use crate::cli::CliArgs;
 use crate::fetch::fetch_results;
 use crate::gitlab_api::types::ResponseNode;
-use anyhow::{Context, anyhow};
+use anyhow::Context;
 use chrono::{Datelike, NaiveDate, Weekday};
 use nu_ansi_term::{Color, Style};
 use std::error::Error;
@@ -59,12 +59,7 @@ mod views;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let cfg = get_cfg()?;
-    if cfg.after() <= cfg.before() {
-        Err(anyhow!(
-            "The `--before` date must come after the `--after` date"
-        ))
-        .context("Failed to validate config")?;
-    }
+    cfg.validate().context("Failed to validate config")?;
 
     let response = fetch_results(
         cfg.username(),
