@@ -59,7 +59,7 @@ mod views;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let cfg = get_cfg()?;
-    if cfg.after() <= cfg.before() {
+    if cfg.before() < cfg.after() {
         Err(anyhow!(
             "The `--before` date must come after the `--after` date"
         ))
