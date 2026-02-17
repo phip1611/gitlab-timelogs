@@ -5,6 +5,9 @@
 - Fixed a bug in the date validation
 - One can now use `--begin` as alias for `--after` and `--end` as alias for
   `--before`
+- One can now use `--month` to show the whole month at once. This new flag has
+  a higher precedence than `--after` and `--before`. The default is still to
+  display the current week (there is no explicit flag for that).
 
 ## v0.7.0 (2026-02-04)
 

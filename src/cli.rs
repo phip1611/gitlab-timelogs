@@ -94,6 +94,11 @@ pub struct CliArgs {
     /// Must be no less than `--after`.
     #[arg(long = "before", alias = "end", default_value_t = get_default_before_date())]
     gitlab_before: NaiveDate,
+    /// Show the whole month.
+    ///
+    /// This has a higher precedence than `--after` and `--before`.
+    #[arg(long = "month")]
+    show_month: bool,
     /// Show an extended summary at the end with the time per issue and per
     /// epic.
     #[arg(short = 'x', long = "extended-summary")]
@@ -119,12 +124,20 @@ impl CliArgs {
         &self.gitlab_token
     }
 
-    pub const fn before(&self) -> NaiveDate {
-        self.gitlab_before
+    pub fn before(&self) -> NaiveDate {
+        if self.show_month {
+            get_month_end()
+        } else {
+            self.gitlab_before
+        }
     }
 
-    pub const fn after(&self) -> NaiveDate {
-        self.gitlab_after
+    pub fn after(&self) -> NaiveDate {
+        if self.show_month {
+            get_month_begin()
+        } else {
+            self.gitlab_after
+        }
     }
 
     pub const fn print_extended_summary(&self) -> bool {
@@ -162,4 +175,20 @@ fn get_default_after_date() -> NaiveDate {
         day = day.sub(TimeDelta::days(1));
     }
     day.naive_local().date()
+}
+
+/// Returns the first day of the current month.
+fn get_month_begin() -> NaiveDate {
+    let now = Local::now();
+    let now_date = now.date_naive();
+    now_date.with_day(1).unwrap()
+}
+
+/// Returns the last day of the current month.
+fn get_month_end() -> NaiveDate {
+    let now = Local::now();
+    let now_date = now.date_naive();
+    now_date
+        .with_day(now_date.num_days_in_month() as u32)
+        .unwrap()
 }
