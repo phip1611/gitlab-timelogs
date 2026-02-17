@@ -3,6 +3,8 @@
 ## v0.7.1 (2026-02-17)
 
 - Fixed a bug in the date validation
+- One can now use `--begin` as alias for `--after` and `--end` as alias for
+  `--before`
 
 ## v0.7.0 (2026-02-04)
 
