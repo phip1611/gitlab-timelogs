@@ -1,5 +1,9 @@
 # Unreleased (Yet)
 
+## v0.7.1 (2026-02-17)
+
+- Fixed a bug in the date validation
+
 ## v0.7.0 (2026-02-04)
 
 - Shows the current week by default (instead of Monday-Today)

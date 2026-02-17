@@ -59,9 +59,10 @@ mod views;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let cfg = get_cfg()?;
-    if cfg.before() < cfg.after() {
+    if cfg.after() > cfg.before() {
         Err(anyhow!(
-            "The `--before` date must come after the `--after` date"
+            "invalid date range: `--after` ({}) must be earlier than `--before` ({})",
+            cfg.after(), cfg.before(),
         ))
         .context("Failed to validate config")?;
     }
