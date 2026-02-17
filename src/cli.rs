@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+use anyhow::anyhow;
 use chrono::{Datelike, Local, NaiveDate, TimeDelta, Weekday};
 use clap::Parser;
 use std::ops::{Add, Sub};
@@ -112,6 +113,20 @@ pub struct CliArgs {
 }
 
 impl CliArgs {
+    pub fn validate(&self) -> Result<(), anyhow::Error> {
+        if self.after() > self.before() {
+            return Err(anyhow!(
+                "invalid date range: `--after` ({}) must be earlier than `--before` ({})",
+                self.after(),
+                self.before(),
+            ));
+        };
+
+        Ok(())
+    }
+}
+
+impl CliArgs {
     pub fn host(&self) -> &str {
         &self.gitlab_host
     }
@@ -191,4 +206,67 @@ fn get_month_end() -> NaiveDate {
     now_date
         .with_day(now_date.num_days_in_month() as u32)
         .unwrap()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::NaiveDate;
+
+    fn base_args(after: NaiveDate, before: NaiveDate) -> CliArgs {
+        CliArgs {
+            gitlab_host: "gitlab.example.com".into(),
+            gitlab_username: "user".into(),
+            gitlab_token: "token".into(),
+            gitlab_after: after,
+            gitlab_before: before,
+            show_month: false,
+            print_extended_summary: false,
+            filter_group: None,
+        }
+    }
+
+    #[test]
+    fn validate_accepts_equal_dates() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 1).unwrap();
+        let args = base_args(date, date);
+
+        assert!(args.validate().is_ok());
+    }
+
+    #[test]
+    fn validate_accepts_after_before() {
+        let after = NaiveDate::from_ymd_opt(2026, 2, 1).unwrap();
+        let before = NaiveDate::from_ymd_opt(2026, 2, 2).unwrap();
+        let args = base_args(after, before);
+
+        assert!(args.validate().is_ok());
+    }
+
+    #[test]
+    fn validate_rejects_after_later_than_before() {
+        let after = NaiveDate::from_ymd_opt(2026, 2, 2).unwrap();
+        let before = NaiveDate::from_ymd_opt(2026, 2, 1).unwrap();
+        let args = base_args(after, before);
+
+        let err = args.validate().expect_err("expected validation to fail");
+        let msg = err.to_string();
+
+        assert!(msg.contains("invalid date range"));
+        assert!(msg.contains("2026-02-02"));
+        assert!(msg.contains("2026-02-01"));
+    }
+
+    #[test]
+    fn validate_show_month_overrides_before_and_after() {
+        let after = NaiveDate::from_ymd_opt(2026, 2, 2).unwrap();
+        let before = NaiveDate::from_ymd_opt(2026, 2, 1).unwrap();
+
+        let mut args = base_args(after, before);
+
+        assert!(args.validate().is_err());
+
+        args.show_month = true;
+        assert!(args.validate().is_ok());
+    }
 }
