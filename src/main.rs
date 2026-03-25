@@ -81,7 +81,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     if nodes.is_empty() {
         print_warning(
-            "Empty response. Is the username correct? Does the token have read permission?",
+            "No entries found in this time span.\nUse --after/--before or --month to choose a different range.",
             0,
         );
     } else {

@@ -29,11 +29,24 @@ SOFTWARE.
 use crate::gitlab_api::types::{ResponseData, ResponseSerialized};
 use anyhow::Context;
 use chrono::{DateTime, Local, NaiveDate, NaiveTime};
+use reqwest::StatusCode;
 use reqwest::blocking::Client;
 use reqwest::header::AUTHORIZATION;
 use serde_json::json;
 
 const GRAPHQL_TEMPLATE: &str = include_str!("./gitlab-query.graphql");
+
+fn http_error_message(status: StatusCode, url: &str) -> String {
+    match status {
+        StatusCode::UNAUTHORIZED => format!(
+            "GitLab API request failed with 401 Unauthorized for {url}.\nCheck that the configured token is valid."
+        ),
+        StatusCode::FORBIDDEN => format!(
+            "GitLab API request failed with 403 Forbidden for {url}.\nCheck that the configured token has `read_api` permission."
+        ),
+        _ => format!("GitLab API request failed with {status} for {url}."),
+    }
+}
 
 /// Transforms a [`NaiveDate`] to a `DateTime<Local>`.
 fn naive_date_to_local_datetime(date: NaiveDate) -> DateTime<Local> {
@@ -98,9 +111,15 @@ fn fetch_response_data(
         .header(AUTHORIZATION, authorization)
         .json(&payload)
         .send()
-        .context("Failed to send request")?
-        .error_for_status()
-        .context("Failed to receive proper response")?;
+        .context("Failed to send request")?;
+
+    let status = plain_response.status();
+    if !status.is_success() {
+        anyhow::bail!(
+            "{}",
+            http_error_message(status, plain_response.url().as_str())
+        );
+    }
 
     let response = plain_response
         .json::<ResponseSerialized>()
@@ -185,4 +204,31 @@ pub fn fetch_results(
         aggregated = next;
     }
     Ok(aggregated)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn http_error_message_mentions_invalid_token_for_unauthorized() {
+        let msg = http_error_message(
+            StatusCode::UNAUTHORIZED,
+            "https://gitlab.example.com/api/graphql",
+        );
+
+        assert!(msg.contains("401 Unauthorized"));
+        assert!(msg.contains("configured token is valid"));
+    }
+
+    #[test]
+    fn http_error_message_mentions_read_api_for_forbidden() {
+        let msg = http_error_message(
+            StatusCode::FORBIDDEN,
+            "https://gitlab.example.com/api/graphql",
+        );
+
+        assert!(msg.contains("403 Forbidden"));
+        assert!(msg.contains("read_api"));
+    }
 }
